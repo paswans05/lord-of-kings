@@ -119,7 +119,7 @@ export function SettingsPanel({
 
         <div className="mc-rule my-5" />
 
-        <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#a89268]">Graphics</p>
+        <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Graphics</p>
         <div className="grid grid-cols-4 gap-2">
           {PRESETS.map((preset) => (
             <button
@@ -133,18 +133,18 @@ export function SettingsPanel({
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs italic text-[#9c8b6c]">
+        <p className="mt-2 text-xs italic text-[#e0ebff]">
           {PRESETS.find((preset) => preset.key === settings.quality)?.note}
         </p>
-        <p className="mt-1 text-[0.68rem] text-[#7d6f57]">
-          Auto-detected on this device: <span className="text-[#c8ab74]">{autoDetected}</span>
+        <p className="mt-1 text-[0.68rem] text-[#c2d4f5]">
+          Auto-detected on this device: <span className="text-[#c084fc]">{autoDetected}</span>
           {fps > 0 ? ` · currently ${fps} FPS` : ""}
         </p>
-        {gpu ? <p className="mt-0.5 text-[0.68rem] text-[#6d6149]">Renderer: {gpu}</p> : null}
+        {gpu ? <p className="mt-0.5 text-[0.68rem] text-[#a5b9e0]">Renderer: {gpu}</p> : null}
 
         <div className="mc-rule my-5" />
 
-        <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#a89268]">Picture</p>
+        <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Picture</p>
         <div className="flex items-center gap-3 py-1">
           <span className="mc-display w-24 shrink-0 text-[0.72rem] text-[#efe0c0]">Brightness</span>
           <input
@@ -157,7 +157,7 @@ export function SettingsPanel({
             onChange={(event) => onChange({ ...settings, brightness: Number(event.target.value) })}
             aria-label="Brightness"
           />
-          <span className="w-10 shrink-0 text-right text-xs text-[#c8ab74]">
+          <span className="w-10 shrink-0 text-right text-xs text-[#c084fc]">
             {Math.round(settings.brightness * 100)}%
           </span>
         </div>

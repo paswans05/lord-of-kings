@@ -79,7 +79,7 @@ export function ArenaPicker({ chosen, onChoose }: { chosen: ArenaTheme; onChoose
           </button>
         ))}
       </div>
-      <p className="mt-2 text-xs italic text-[#9c8b6c]">{ARENA_LOOKS[chosen].note}</p>
+      <p className="mt-2 text-xs italic text-[#e0ebff]">{ARENA_LOOKS[chosen].note}</p>
     </>
   );
 }
@@ -97,7 +97,7 @@ export function MusterSection({
 }) {
   return (
     <>
-      <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#a89268]">Armies</p>
+      <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Armies</p>
       <ArmyPicker
         side="w"
         name="Near side"
@@ -110,11 +110,11 @@ export function MusterSection({
         chosen={choice.skins.b}
         onChoose={(skin) => onChange({ ...choice, skins: { ...choice.skins, b: skin } })}
       />
-      <p className="mt-2 text-xs italic text-[#9c8b6c]">{armyBlurb(choice.skins)}</p>
+      <p className="mt-2 text-xs italic text-[#e0ebff]">{armyBlurb(choice.skins)}</p>
 
       <div className="mc-rule my-5" />
 
-      <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#a89268]">Battleground</p>
+      <p className="mc-display mb-2 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Battleground</p>
       <ArenaPicker chosen={choice.arena} onChoose={(arena) => onChange({ ...choice, arena })} />
     </>
   );
@@ -127,7 +127,7 @@ export function MusterSection({
 export function MusterLocked({ choice }: { choice: MusterChoice }) {
   return (
     <div className="mc-muster-locked">
-      <p className="mc-display mb-2 flex items-center gap-2 text-[0.6rem] tracking-[0.3em] text-[#a89268]">
+      <p className="mc-display mb-2 flex items-center gap-2 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">
         <Lock size={11} />
         Muster · locked
       </p>

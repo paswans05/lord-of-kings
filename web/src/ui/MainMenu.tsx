@@ -71,12 +71,12 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
       onPointerMove={onInteract}
     >
       <div className="mc-unfurl mc-menu-hero mb-6 shrink-0 text-center">
-        <p className="mc-display text-[0.68rem] tracking-[0.55em] text-[#c8ab74]">KINGDOM OF MAGADHA</p>
-        <h1 className="mc-display mc-title-glow mt-2 text-5xl font-bold text-[#f4e3bd] sm:text-6xl">
+        <p className="mc-display text-[0.68rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.5)]">KINGDOM OF MAGADHA</p>
+        <h1 className="mc-display mc-title-glow mt-2 text-5xl font-extrabold text-white sm:text-6xl">
           LORD OF KING&apos;S
         </h1>
         <div className="mc-rule mx-auto mt-3 w-64" />
-        <p className="mt-3 text-sm italic text-[#c5b28d]">
+        <p className="mt-3 text-sm italic text-[#e2ebfc]">
           {attract ? "An AI vs AI duel is under way — move to take the hall" : "Chess in the great hall of Aldermoor"}
         </p>
       </div>
@@ -113,7 +113,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
           {tab === "ai" ? (
             <div className="mc-fade space-y-5">
               <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Opponent</p>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Opponent</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(["easy", "medium", "hard"] as Difficulty[]).map((level) => (
                     <button
@@ -127,11 +127,11 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs italic text-[#9c8b6c]">{DIFFICULTY_COPY[difficulty]}</p>
+                <p className="mt-2 text-xs italic text-[#e0ebff]">{DIFFICULTY_COPY[difficulty]}</p>
               </div>
 
               <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Your banner</p>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Your banner</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(["w", "b"] as Faction[]).map((color) => (
                     <button
@@ -149,11 +149,11 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               </div>
             </div>
           ) : tab === "hotseat" ? (
-            <p className="mc-fade text-sm italic leading-relaxed text-[#b7a88a]">
+            <p className="mc-fade text-sm italic leading-relaxed text-[#e0ebff]">
               Two commanders, one board. The view holds its angle between turns —{" "}
               {hasKeyboard ? (
                 <>
-                  flip it whenever you like with <span className="mc-display text-[#e2c98f]">F</span>, or
+                  flip it whenever you like with <span className="mc-display text-[#c084fc]">F</span>, or
                 </>
               ) : (
                 <>flip it whenever you like from the camera menu, or</>
@@ -162,12 +162,12 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
             </p>
           ) : (
             <div className="mc-fade space-y-5">
-              <p className="text-sm italic leading-relaxed text-[#b7a88a]">
+              <p className="text-sm italic leading-relaxed text-[#e0ebff]">
                 Two AI commanders duel on their own while the camera drifts around the hall — made for watching and for
                 capturing footage.{" "}
                 {hasKeyboard ? (
                   <>
-                    Press <span className="mc-display text-[#e2c98f]">C</span> in the match to hide the whole interface.
+                    Press <span className="mc-display text-[#c084fc]">C</span> in the match to hide the whole interface.
                   </>
                 ) : (
                   <>Tap the clean-capture sigil in the match to hide the whole interface.</>
@@ -175,7 +175,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               </p>
 
               <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Ivory engine</p>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Ivory engine</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(["easy", "medium", "hard"] as Difficulty[]).map((level) => (
                     <button
@@ -192,7 +192,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               </div>
 
               <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Obsidian engine</p>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Obsidian engine</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(["easy", "medium", "hard"] as Difficulty[]).map((level) => (
                     <button
@@ -209,7 +209,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               </div>
 
               <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Pace</p>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Pace</p>
                 <div className="grid grid-cols-4 gap-2">
                   {DEMO_SPEEDS.map((option) => (
                     <button
@@ -240,7 +240,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
 
           {tab === "demo" ? null : (
             <div className="mt-5">
-              <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#a89268]">Hourglass</p>
+              <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Hourglass</p>
               <div className="grid grid-cols-4 gap-2">
                 {CLOCKS.map((option) => (
                   <button
