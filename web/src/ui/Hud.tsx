@@ -245,6 +245,9 @@ export function Hud({
   const whiteTaken = snapshot.captured.filter((piece) => piece.color === "b");
   const blackTaken = snapshot.captured.filter((piece) => piece.color === "w");
   const diff = snapshot.materialDiff;
+  const isMyTurn =
+    snapshot.status === "playing" &&
+    (snapshot.mode === "hotseat" || snapshot.turn === snapshot.playerColor);
 
   const ledger = (
     <MoveLedger
@@ -275,6 +278,26 @@ export function Hud({
 
   return (
     <>
+      {snapshot.status === "playing" && (
+        <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-40">
+          {isMyTurn ? (
+            <div className="mc-unfurl rounded-full border border-[#c084fc] bg-[#1e0a38]/90 px-5 py-1.5 shadow-[0_0_20px_rgba(192,132,252,0.55)] backdrop-blur-md flex items-center gap-2">
+              <span className="mc-pulse h-2 w-2 rounded-full bg-[#c084fc]" />
+              <span className="mc-display text-[0.68rem] font-bold tracking-[0.3em] text-[#e9d5ff]">
+                YOUR TURN — COMMAND YOUR ARMY
+              </span>
+            </div>
+          ) : (
+            <div className="rounded-full border border-white/10 bg-black/70 px-4 py-1.5 backdrop-blur-md flex items-center gap-2">
+              <span className="mc-pulse h-2 w-2 rounded-full bg-amber-400" />
+              <span className="mc-display text-[0.65rem] tracking-[0.25em] text-[#a5b9e0]">
+                {snapshot.mode === "online" ? "OPPONENT'S TURN — AWAITING MOVE" : "OPPONENT IS THINKING…"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Top bar */}
       {/* Padding (including the notch/home-bar insets) lives in `.mc-hud-top`. */}
       <div className="mc-hud-top pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3">
@@ -303,6 +326,11 @@ export function Hud({
                       : "Obsidian"}
               </p>
             </div>
+            {isMyTurn && snapshot.status === "playing" ? (
+              <span className="mc-display rounded-md border border-[#c084fc] bg-[#c084fc]/20 px-2 py-1 text-[0.58rem] font-bold tracking-[0.2em] text-[#e9d5ff] shadow-[0_0_12px_rgba(192,132,252,0.5)]">
+                YOUR TURN
+              </span>
+            ) : null}
             {snapshot.inCheck && snapshot.status === "playing" ? (
               <span className="mc-danger-flash mc-display rounded-sm border border-[#a8342a] px-2 py-1 text-[0.6rem] tracking-[0.24em] text-[#ff9a8a]">
                 CHECK
