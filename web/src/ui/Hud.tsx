@@ -23,6 +23,7 @@ import {
   Video,
   Volume2,
   VolumeX,
+  Wifi,
   X,
 } from "lucide-react";
 
@@ -33,8 +34,16 @@ import { useHasKeyboard } from "./inputMode";
 import { MoveLedger } from "./MoveLedger";
 import { Tooltip, type TooltipSide } from "./Tooltip";
 
+export interface OnlineHudInfo {
+  isOnline: boolean;
+  isConnected: boolean;
+  pingMs: number;
+  roomCode: string;
+}
+
 interface HudProps {
   snapshot: GameSnapshot;
+  onlineStatus?: OnlineHudInfo;
   muted: boolean;
   fps: number;
   onNewGame: () => void;
@@ -132,6 +141,7 @@ function formatElapsed(ms: number): string {
 
 export function Hud({
   snapshot,
+  onlineStatus,
   muted,
   fps,
   onNewGame,
@@ -275,11 +285,13 @@ export function Hud({
               <p className="mc-display text-[0.58rem] tracking-[0.3em] text-[#a89268]">
                 {demo
                   ? `AI vs AI · duel ${snapshot.demoRound}`
-                  : snapshot.status === "over"
-                    ? "Battle ended"
-                    : snapshot.thinking
-                      ? "Council of war"
-                      : "To move"}
+                  : snapshot.mode === "online"
+                    ? `Online Duel · ${onlineStatus?.roomCode || ""}`
+                    : snapshot.status === "over"
+                      ? "Battle ended"
+                      : snapshot.thinking
+                        ? "Council of war"
+                        : "To move"}
               </p>
               <p className="mc-display text-sm text-[#f2e2bd]">
                 {snapshot.status === "over"
@@ -305,6 +317,24 @@ export function Hud({
         </div>
 
         <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-1.5">
+          {onlineStatus?.isOnline ? (
+            <div className="mc-slate flex items-center gap-2 px-3 py-1.5 text-xs text-[#c084fc]">
+              <Wifi
+                size={14}
+                className={
+                  onlineStatus.isConnected
+                    ? onlineStatus.pingMs > 150
+                      ? "text-yellow-400"
+                      : "text-emerald-400 animate-pulse"
+                    : "text-rose-400 animate-pulse"
+                }
+              />
+              <span className="font-mono font-bold">
+                {onlineStatus.isConnected ? `${onlineStatus.pingMs} ms` : "Connecting..."}
+              </span>
+              <span className="opacity-60 text-[0.62rem] tracking-wider">({onlineStatus.roomCode})</span>
+            </div>
+          ) : null}
           {snapshot.clock.enabled ? (
             <div className="mc-slate flex items-center gap-3 px-3 py-1.5">
               <ClockFace

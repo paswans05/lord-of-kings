@@ -20,7 +20,22 @@ export interface NetworkResignPayload {
   color: Faction;
 }
 
-export type NetworkMessage = NetworkMovePayload | NetworkHandshakePayload | NetworkResignPayload;
+export interface NetworkPingPayload {
+  type: "PING";
+  t: number;
+}
+
+export interface NetworkPongPayload {
+  type: "PONG";
+  t: number;
+}
+
+export type NetworkMessage =
+  | NetworkMovePayload
+  | NetworkHandshakePayload
+  | NetworkResignPayload
+  | NetworkPingPayload
+  | NetworkPongPayload;
 
 export interface MultiplayerEvents {
   onConnect: () => void;
@@ -28,6 +43,7 @@ export interface MultiplayerEvents {
   onMove: (from: SquareId, to: SquareId, promotion?: PieceKind) => void;
   onHandshake: (color: Faction, muster: MusterChoice) => void;
   onResign: (color: Faction) => void;
+  onPing: (pingMs: number) => void;
   onError: (error: string) => void;
 }
 
@@ -47,8 +63,13 @@ export class MultiplayerService {
   private connection: DataConnection | null = null;
   private broadcastChannel: BroadcastChannel | null = null;
   private events: Partial<MultiplayerEvents> = {};
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private joinAttempts = 0;
+  public pingMs = 0;
   public isHost = false;
   public roomCode = "";
+  public isConnected = false;
 
   constructor(events: Partial<MultiplayerEvents>) {
     this.events = events;
@@ -60,13 +81,10 @@ export class MultiplayerService {
     this.isHost = true;
     const fullPeerId = `${PEER_PREFIX}${this.roomCode}`;
 
-    // Setup local BroadcastChannel fallback for multi-tab testing
     this.setupBroadcastChannel(this.roomCode);
 
     try {
-      this.peer = new Peer(fullPeerId, {
-        debug: 1,
-      });
+      this.peer = new Peer(fullPeerId, { debug: 1 });
 
       this.peer.on("open", () => {
         console.log(`[Multiplayer] Room created: ${this.roomCode}`);
@@ -87,32 +105,50 @@ export class MultiplayerService {
     return this.roomCode;
   }
 
-  /** Join an existing room code as Guest. */
+  /** Join an existing room code as Guest with auto-retry. */
   public joinRoom(roomCode: string): void {
     this.roomCode = roomCode.trim().toUpperCase();
     this.isHost = false;
     const fullPeerId = `${PEER_PREFIX}${this.roomCode}`;
 
     this.setupBroadcastChannel(this.roomCode);
+    this.broadcastChannel?.postMessage({ type: "GUEST_PING" });
 
-    try {
-      this.peer = new Peer({ debug: 1 });
+    const attemptConnect = (): void => {
+      if (this.isConnected) return;
+      this.joinAttempts += 1;
+      console.log(`[Multiplayer] Connecting to host: ${this.roomCode} (attempt ${this.joinAttempts})`);
 
-      this.peer.on("open", () => {
-        if (!this.peer) return;
-        console.log(`[Multiplayer] Connecting to host: ${this.roomCode}`);
-        const conn = this.peer.connect(fullPeerId);
-        this.bindConnection(conn);
-      });
+      try {
+        if (this.peer && !this.peer.destroyed) {
+          const conn = this.peer.connect(fullPeerId);
+          this.bindConnection(conn);
+        } else {
+          this.peer = new Peer({ debug: 1 });
 
-      this.peer.on("error", (err) => {
-        console.warn("[Multiplayer] PeerJS join error, using BroadcastChannel:", err);
-        // Fallback check
-        this.broadcastChannel?.postMessage({ type: "GUEST_PING" });
-      });
-    } catch (e) {
-      console.warn("[Multiplayer] PeerJS join fallback:", e);
-    }
+          this.peer.on("open", () => {
+            if (!this.peer || this.isConnected) return;
+            const conn = this.peer.connect(fullPeerId);
+            this.bindConnection(conn);
+          });
+
+          this.peer.on("error", (err) => {
+            console.warn(`[Multiplayer] PeerJS connect info (attempt ${this.joinAttempts}):`, err.message);
+            // Retries every 2.5 seconds up to 12 attempts until host is active
+            if (!this.isConnected && this.joinAttempts < 12) {
+              this.retryTimer = setTimeout(attemptConnect, 2500);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("[Multiplayer] PeerJS join fallback:", e);
+        if (!this.isConnected && this.joinAttempts < 12) {
+          this.retryTimer = setTimeout(attemptConnect, 2500);
+        }
+      }
+    };
+
+    attemptConnect();
   }
 
   private setupBroadcastChannel(roomCode: string): void {
@@ -125,9 +161,9 @@ export class MultiplayerService {
 
       if (data.type === "GUEST_PING" && this.isHost) {
         this.broadcastChannel?.postMessage({ type: "HOST_PONG" });
-        this.events.onConnect?.();
+        this.handleConnect();
       } else if (data.type === "HOST_PONG" && !this.isHost) {
-        this.events.onConnect?.();
+        this.handleConnect();
       } else {
         this.handleMessage(data as NetworkMessage);
       }
@@ -139,7 +175,7 @@ export class MultiplayerService {
 
     conn.on("open", () => {
       console.log("[Multiplayer] Direct WebRTC data channel connected!");
-      this.events.onConnect?.();
+      this.handleConnect();
     });
 
     conn.on("data", (data) => {
@@ -148,6 +184,8 @@ export class MultiplayerService {
 
     conn.on("close", () => {
       console.log("[Multiplayer] Peer connection closed");
+      this.isConnected = false;
+      this.stopPingInterval();
       this.events.onDisconnect?.("Peer disconnected");
     });
 
@@ -157,8 +195,34 @@ export class MultiplayerService {
     });
   }
 
+  private handleConnect(): void {
+    if (this.isConnected) return;
+    this.isConnected = true;
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
+    this.startPingInterval();
+    this.events.onConnect?.();
+  }
+
+  private startPingInterval(): void {
+    this.stopPingInterval();
+    this.pingInterval = setInterval(() => {
+      if (this.isConnected) {
+        this.send({ type: "PING", t: Date.now() });
+      }
+    }, 2000);
+  }
+
+  private stopPingInterval(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
   private handleMessage(msg: NetworkMessage): void {
-    console.log("[Multiplayer] Received network message:", msg);
     switch (msg.type) {
       case "HANDSHAKE":
         this.events.onHandshake?.(msg.playerColor, msg.muster);
@@ -168,6 +232,13 @@ export class MultiplayerService {
         break;
       case "RESIGN":
         this.events.onResign?.(msg.color);
+        break;
+      case "PING":
+        this.send({ type: "PONG", t: msg.t });
+        break;
+      case "PONG":
+        this.pingMs = Math.max(4, Math.round(Date.now() - msg.t));
+        this.events.onPing?.(this.pingMs);
         break;
     }
   }
@@ -197,6 +268,12 @@ export class MultiplayerService {
   }
 
   public disconnect(): void {
+    this.isConnected = false;
+    this.stopPingInterval();
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
     if (this.connection) {
       this.connection.close();
       this.connection = null;

@@ -253,6 +253,17 @@ export function GameShell() {
   const [tactical, setTactical] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [onlineInfo, setOnlineInfo] = useState<{
+    isOnline: boolean;
+    isConnected: boolean;
+    pingMs: number;
+    roomCode: string;
+  }>({
+    isOnline: false,
+    isConnected: false,
+    pingMs: 0,
+    roomCode: "",
+  });
   /** Showcase recording: strips every panel so the capture is board-only. */
   const [cinema, setCinema] = useState(false);
   /** How the camera behaves during a showcase duel: held, orbiting or following. */
@@ -430,23 +441,34 @@ export function GameShell() {
       }
 
       if (config.mode === "online") {
+        setOnlineInfo({
+          isOnline: true,
+          isConnected: false,
+          pingMs: 0,
+          roomCode: config.online?.roomCode || "",
+        });
+
         if (multiplayerRef.current) {
           multiplayerRef.current.disconnect();
         }
         const service = new MultiplayerService({
           onConnect: () => {
-            setNotice("Connected with Friend!");
-            setTimeout(() => setNotice(null), 3000);
+            setNotice("⚡ FRIEND CONNECTED & LIVE!");
+            setTimeout(() => setNotice(null), 4000);
+            setOnlineInfo((prev) => ({ ...prev, isConnected: true }));
             if (config.online?.isHost) {
               service.sendHandshake(config.playerColor, { arena: settings.arena, skins: settings.skins });
             }
+          },
+          onPing: (pingMs) => {
+            setOnlineInfo((prev) => ({ ...prev, pingMs }));
           },
           onMove: (from, to, promotion) => {
             void controller.tryMove(from, to, promotion);
           },
           onHandshake: (hostColor) => {
-            setNotice("Joined Friend Room!");
-            setTimeout(() => setNotice(null), 3000);
+            setNotice("⚡ JOINED FRIEND ROOM!");
+            setTimeout(() => setNotice(null), 4000);
             const guestColor: Faction = hostColor === "w" ? "b" : "w";
             controller.start({
               mode: "online",
@@ -458,6 +480,7 @@ export function GameShell() {
           },
           onDisconnect: () => {
             setNotice("Friend Disconnected");
+            setOnlineInfo((prev) => ({ ...prev, isConnected: false }));
           },
         });
         multiplayerRef.current = service;
@@ -466,6 +489,8 @@ export function GameShell() {
         } else if (config.online?.roomCode) {
           service.joinRoom(config.online.roomCode);
         }
+      } else {
+        setOnlineInfo({ isOnline: false, isConnected: false, pingMs: 0, roomCode: "" });
       }
 
       controller.start({
@@ -709,6 +734,7 @@ export function GameShell() {
         {phase === "playing" && !cinema ? (
           <Hud
             snapshot={snapshot}
+            onlineStatus={onlineInfo}
             muted={settings.muted}
             fps={fps}
             onNewGame={returnToMenu}
@@ -854,3 +880,4 @@ function LoadingScreen({ progress }: { progress: number }) {
     </div>
   );
 }
+
