@@ -45,21 +45,17 @@ export type HighlightKind =
   | "queuedTarget";
 
 const HIGHLIGHT_COLORS: Record<HighlightKind, number> = {
-  select: 0xffc95e,
-  move: 0x5cf2a4,
+  select: 0xc084fc,
+  move: 0xa855f7,
   capture: 0xff5a44,
-  castle: 0x63b8ff,
-  promote: 0xc784ff,
-  last: 0xd9a441,
+  castle: 0xc084fc,
+  promote: 0x9333ea,
+  last: 0xa855f7,
   check: 0xff3b30,
-  hint: 0x6aa9ff,
-  // Cold pewter, deliberately outside the palette every *played* move uses:
-  // an intention has no business competing with the move on the board.
-  premove: 0x7d8ba3,
-  queued: 0x8ea0bd,
-  // The destination is the half of a queued move worth reading, so it is the
-  // bright end of the pewter: near-white steel against the dim origin.
-  queuedTarget: 0xe6edff,
+  hint: 0xc084fc,
+  premove: 0xc084fc,
+  queued: 0xa855f7,
+  queuedTarget: 0x7e22ce,
 };
 
 /** How dark an unreachable square goes while a piece is selected. */
