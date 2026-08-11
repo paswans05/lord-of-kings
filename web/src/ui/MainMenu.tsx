@@ -53,14 +53,10 @@ const CLOCKS: { label: string; value: number | null }[] = [
 
 export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, onInteract }: MainMenuProps) {
   const hasKeyboard = useHasKeyboard();
-  const [tab, setTab] = useState<"ai" | "hotseat" | "demo" | "online">("ai");
+  const [tab, setTab] = useState<"ai" | "hotseat" | "online">("ai");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [playerColor, setPlayerColor] = useState<Faction>("w");
   const [clock, setClock] = useState<number | null>(null);
-  const [demoWhite, setDemoWhite] = useState<Difficulty>("medium");
-  const [demoBlack, setDemoBlack] = useState<Difficulty>("hard");
-  const [demoSpeed, setDemoSpeed] = useState(1);
-  const [demoLoop, setDemoLoop] = useState(true);
 
   // Online Multiplayer State
   const [onlineTab, setOnlineTab] = useState<"create" | "join">("create");
@@ -92,8 +88,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
       mode: tab,
       difficulty,
       playerColor,
-      clockMinutes: tab === "demo" ? null : clock,
-      demo: tab === "demo" ? { white: demoWhite, black: demoBlack, speed: demoSpeed, autoRematch: demoLoop } : undefined,
+      clockMinutes: clock,
       online: tab === "online" ? { roomCode: selectedCode, isHost: onlineTab === "create" } : undefined,
     });
   };
@@ -113,15 +108,15 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
         </h1>
         <div className="mc-rule mx-auto mt-3 w-64" />
         <p className="mt-3 text-sm italic text-[#e2ebfc]">
-          {attract ? "An AI vs AI duel is under way — move to take the hall" : "Chess in the great hall of Aldermoor"}
+          Chess in the great hall of Magadha
         </p>
       </div>
 
       <div className="mc-slate mc-goldleaf mc-rise flex w-full min-h-0 max-w-md flex-col p-5 sm:p-6">
-        <div className="mb-5 grid shrink-0 grid-cols-4 gap-1.5">
+        <div className="mb-5 grid shrink-0 grid-cols-3 gap-2">
           <button
             type="button"
-            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
+            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3 text-xs"
             data-active={tab === "ai"}
             onClick={() => setTab("ai")}
           >
@@ -129,7 +124,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
           </button>
           <button
             type="button"
-            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
+            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3 text-xs"
             data-active={tab === "hotseat"}
             onClick={() => setTab("hotseat")}
           >
@@ -137,19 +132,11 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
           </button>
           <button
             type="button"
-            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
+            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3 text-xs"
             data-active={tab === "online"}
             onClick={() => setTab("online")}
           >
             <Globe size={14} /> Online
-          </button>
-          <button
-            type="button"
-            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
-            data-active={tab === "demo"}
-            onClick={() => setTab("demo")}
-          >
-            <Clapperboard size={14} /> AI vs AI
           </button>
         </div>
 
@@ -204,7 +191,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               )}{" "}
               switch on the automatic swing in settings.
             </p>
-          ) : tab === "online" ? (
+          ) : (
             <div className="mc-fade space-y-4">
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -285,102 +272,24 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="mc-fade space-y-5">
-              <p className="text-sm italic leading-relaxed text-[#e0ebff]">
-                Two AI commanders duel on their own while the camera drifts around the hall — made for watching and for
-                capturing footage.{" "}
-                {hasKeyboard ? (
-                  <>
-                    Press <span className="mc-display text-[#c084fc]">C</span> in the match to hide the whole interface.
-                  </>
-                ) : (
-                  <>Tap the clean-capture sigil in the match to hide the whole interface.</>
-                )}
-              </p>
-
-              <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Ivory engine</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["easy", "medium", "hard"] as Difficulty[]).map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      className="mc-chip py-2.5"
-                      data-active={demoWhite === level}
-                      onClick={() => setDemoWhite(level)}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Obsidian engine</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["easy", "medium", "hard"] as Difficulty[]).map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      className="mc-chip py-2.5"
-                      data-active={demoBlack === level}
-                      onClick={() => setDemoBlack(level)}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Pace</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {DEMO_SPEEDS.map((option) => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      className="mc-chip py-2.5"
-                      data-active={demoSpeed === option.value}
-                      onClick={() => setDemoSpeed(option.value)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="mc-chip flex w-full items-center justify-between px-3 py-2.5"
-                data-active={demoLoop}
-                onClick={() => setDemoLoop((loop) => !loop)}
-                aria-pressed={demoLoop}
-              >
-                <span>Loop new duels</span>
-                <span className="mc-display text-[0.62rem] tracking-[0.24em]">{demoLoop ? "ON" : "OFF"}</span>
-              </button>
-            </div>
           )}
 
-          {tab === "demo" ? null : (
-            <div className="mt-5">
-              <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Hourglass</p>
-              <div className="grid grid-cols-4 gap-2">
-                {CLOCKS.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    className="mc-chip py-2.5"
-                    data-active={clock === option.value}
-                    onClick={() => setClock(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-5">
+            <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Hourglass</p>
+            <div className="grid grid-cols-4 gap-2">
+              {CLOCKS.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  className="mc-chip py-2.5"
+                  data-active={clock === option.value}
+                  onClick={() => setClock(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div className="mc-rule my-5" />
 
@@ -393,11 +302,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
             className="mc-btn mc-btn-primary mt-5 flex w-full items-center justify-center gap-2 py-3.5 text-sm"
             onClick={start}
           >
-            {tab === "demo" ? (
-              <>
-                <Clapperboard size={16} /> Start AI vs AI
-              </>
-            ) : tab === "online" ? (
+            {tab === "online" ? (
               <>
                 <Globe size={16} /> {onlineTab === "create" ? "Host Friend Room" : "Join Friend Game"}
               </>
