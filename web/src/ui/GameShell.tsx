@@ -210,6 +210,7 @@ export function GameShell() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<SceneEngine | null>(null);
   const multiplayerRef = useRef<MultiplayerService | null>(null);
+  const isReceivingNetworkMove = useRef<boolean>(false);
   const attractTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const controller = useMemo(() => new GameController(), []);
@@ -342,7 +343,7 @@ export function GameShell() {
 
   useEffect(() => {
     const unsub = controller.on("move", (evt) => {
-      if (multiplayerRef.current) {
+      if (multiplayerRef.current && !isReceivingNetworkMove.current) {
         multiplayerRef.current.sendMove(evt.from, evt.to, evt.promotion ?? undefined);
       }
     });
@@ -464,7 +465,10 @@ export function GameShell() {
             setOnlineInfo((prev) => ({ ...prev, pingMs }));
           },
           onMove: (from, to, promotion) => {
-            void controller.tryMove(from, to, promotion);
+            isReceivingNetworkMove.current = true;
+            void controller.applyNetworkMove(from, to, promotion).finally(() => {
+              isReceivingNetworkMove.current = false;
+            });
           },
           onHandshake: (hostColor) => {
             setNotice("⚡ JOINED FRIEND ROOM!");

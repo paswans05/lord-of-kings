@@ -716,6 +716,11 @@ export class GameController extends Emitter<ControllerEvents> {
     return this.play(from, to, promotion);
   }
 
+  /** Plays a move received from an online opponent over the network. */
+  async applyNetworkMove(from: SquareId, to: SquareId, promotion?: PieceKind): Promise<boolean> {
+    return this.play(from, to, promotion);
+  }
+
   private async play(from: SquareId, to: SquareId, promotion?: PieceKind): Promise<boolean> {
     let move: Move | null = null;
     try {
