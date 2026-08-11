@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clapperboard, Crown, Swords, Settings as SettingsIcon, Users, Globe, Copy, Check, Link } from "lucide-react";
+import { Clapperboard, Crown, Swords, Settings as SettingsIcon, User, Users, Globe, Copy, Check, Link } from "lucide-react";
 
 import type { DemoOptions, Difficulty, Faction } from "../core/types";
 import { generateRoomCode } from "../core/multiplayer";
@@ -10,6 +10,7 @@ import { MusterSection, type MusterChoice } from "./Muster";
 export interface OnlineMatchOptions {
   roomCode: string;
   isHost: boolean;
+  playerName?: string;
 }
 
 export interface MatchConfig {
@@ -63,6 +64,21 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
   const [hostCode, setHostCode] = useState<string>(() => generateRoomCode());
   const [joinCode, setJoinCode] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
+  const [playerName, setPlayerName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("kg.playername") || "Commander";
+    }
+    return "Commander";
+  });
+
+  const handlePlayerNameChange = (name: string): void => {
+    setPlayerName(name);
+    try {
+      window.localStorage.setItem("kg.playername", name);
+    } catch {
+      // Ignore storage errors in private mode
+    }
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -89,7 +105,10 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
       difficulty,
       playerColor,
       clockMinutes: clock,
-      online: tab === "online" ? { roomCode: selectedCode, isHost: onlineTab === "create" } : undefined,
+      online:
+        tab === "online"
+          ? { roomCode: selectedCode, isHost: onlineTab === "create", playerName: playerName.trim() || "Commander" }
+          : undefined,
     });
   };
 
@@ -193,6 +212,22 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
             </p>
           ) : (
             <div className="mc-fade space-y-4">
+              {/* Rename Commander Field - ONLY IN ONLINE MODE */}
+              <div>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Your Commander Name</p>
+                <div className="relative flex items-center">
+                  <User size={14} className="absolute left-3 text-[#c084fc]" />
+                  <input
+                    type="text"
+                    className="mc-chip w-full pl-9 pr-3 py-2 text-sm font-semibold text-white outline-none focus:border-[#c084fc]"
+                    placeholder="Enter your commander name..."
+                    maxLength={24}
+                    value={playerName}
+                    onChange={(e) => handlePlayerNameChange(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"

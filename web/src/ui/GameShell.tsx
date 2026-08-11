@@ -486,6 +486,10 @@ export function GameShell() {
             setNotice("Friend Disconnected");
             setOnlineInfo((prev) => ({ ...prev, isConnected: false }));
           },
+          onError: (errMsg) => {
+            setNotice(errMsg);
+            setOnlineInfo((prev) => ({ ...prev, isConnected: false }));
+          },
         });
         multiplayerRef.current = service;
         if (config.online?.isHost) {

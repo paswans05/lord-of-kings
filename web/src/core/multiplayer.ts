@@ -30,12 +30,17 @@ export interface NetworkPongPayload {
   t: number;
 }
 
+export interface NetworkRoomFullPayload {
+  type: "ROOM_FULL";
+}
+
 export type NetworkMessage =
   | NetworkMovePayload
   | NetworkHandshakePayload
   | NetworkResignPayload
   | NetworkPingPayload
-  | NetworkPongPayload;
+  | NetworkPongPayload
+  | NetworkRoomFullPayload;
 
 export interface MultiplayerEvents {
   onConnect: () => void;
@@ -91,6 +96,12 @@ export class MultiplayerService {
       });
 
       this.peer.on("connection", (conn) => {
+        if (this.isConnected) {
+          console.warn("[Multiplayer] 3rd player connection attempt. Rejecting (Room Full).");
+          conn.send({ type: "ROOM_FULL" });
+          setTimeout(() => conn.close(), 500);
+          return;
+        }
         console.log("[Multiplayer] Guest connected via PeerJS");
         this.bindConnection(conn);
       });
@@ -160,10 +171,16 @@ export class MultiplayerService {
       if (!data || typeof data !== "object") return;
 
       if (data.type === "GUEST_PING" && this.isHost) {
+        if (this.isConnected) {
+          this.broadcastChannel?.postMessage({ type: "ROOM_FULL" });
+          return;
+        }
         this.broadcastChannel?.postMessage({ type: "HOST_PONG" });
         this.handleConnect();
       } else if (data.type === "HOST_PONG" && !this.isHost) {
         this.handleConnect();
+      } else if (data.type === "ROOM_FULL") {
+        this.handleRoomFull();
       } else {
         this.handleMessage(data as NetworkMessage);
       }
@@ -240,7 +257,21 @@ export class MultiplayerService {
         this.pingMs = Math.max(4, Math.round(Date.now() - msg.t));
         this.events.onPing?.(this.pingMs);
         break;
+      case "ROOM_FULL":
+        this.handleRoomFull();
+        break;
     }
+  }
+
+  private handleRoomFull(): void {
+    console.warn("[Multiplayer] Room is full! Rejecting 3rd player.");
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
+    this.isConnected = false;
+    this.disconnect();
+    this.events.onError?.("⚠️ ROOM IS FULL! This match already has 2 commanders playing.");
   }
 
   public sendHandshake(playerColor: Faction, muster: MusterChoice): void {
