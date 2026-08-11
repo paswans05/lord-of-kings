@@ -186,7 +186,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
                       onClick={() => setPlayerColor(color)}
                     >
                       <Crest faction={color} size={18} active={playerColor === color} />
-                      {color === "w" ? "Ivory" : "Obsidian"}
+                      {color === "w" ? "Vikramaditya" : "Suryadev"}
                     </button>
                   ))}
                 </div>
@@ -279,7 +279,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
                       onClick={() => setPlayerColor(color)}
                     >
                       <Crest faction={color} size={18} active={playerColor === color} />
-                      {color === "w" ? "Ivory" : "Obsidian"}
+                      {color === "w" ? "Vikramaditya" : "Suryadev"}
                     </button>
                   ))}
                 </div>
