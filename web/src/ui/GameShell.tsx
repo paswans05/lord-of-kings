@@ -10,6 +10,7 @@ import {
   THINK_FLOOR_CHOICES,
 } from "../core/gameController";
 import type { Faction, LedgerMove, PieceKind } from "../core/types";
+import { MultiplayerService } from "../core/multiplayer";
 import { Clapperboard } from "lucide-react";
 import { ARENA_LOOKS, DEFAULT_ARENA } from "../scene/arena";
 import { detectQualityPreset, type QualityPreset } from "../scene/quality";
@@ -208,6 +209,7 @@ function saveRenderPrefs(prefs: RenderPrefs): void {
 export function GameShell() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<SceneEngine | null>(null);
+  const multiplayerRef = useRef<MultiplayerService | null>(null);
   const attractTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const controller = useMemo(() => new GameController(), []);
@@ -327,6 +329,15 @@ export function GameShell() {
 
   useEffect(() => () => controller.dispose(), [controller]);
 
+  useEffect(() => {
+    const unsub = controller.on("move", (evt) => {
+      if (multiplayerRef.current) {
+        multiplayerRef.current.sendMove(evt.from, evt.to, evt.promotion ?? undefined);
+      }
+    });
+    return () => unsub();
+  }, [controller]);
+
   // ----------------------------------------------------- audio unlock on input
   useEffect(() => {
     const unlock = (): void => {
@@ -415,8 +426,48 @@ export function GameShell() {
       // A showcase brings its own framing (and its own crisp grade) with it.
       engine?.setShowcase(showcase, showcaseCamera);
       if (!showcase) {
-        engine?.setCameraPreset(config.mode === "ai" && config.playerColor === "b" ? "black" : "white");
+        engine?.setCameraPreset(config.playerColor === "b" ? "black" : "white");
       }
+
+      if (config.mode === "online") {
+        if (multiplayerRef.current) {
+          multiplayerRef.current.disconnect();
+        }
+        const service = new MultiplayerService({
+          onConnect: () => {
+            setNotice("Connected with Friend!");
+            setTimeout(() => setNotice(null), 3000);
+            if (config.online?.isHost) {
+              service.sendHandshake(config.playerColor, { arena: settings.arena, skins: settings.skins });
+            }
+          },
+          onMove: (from, to, promotion) => {
+            void controller.tryMove(from, to, promotion);
+          },
+          onHandshake: (hostColor) => {
+            setNotice("Joined Friend Room!");
+            setTimeout(() => setNotice(null), 3000);
+            const guestColor: Faction = hostColor === "w" ? "b" : "w";
+            controller.start({
+              mode: "online",
+              difficulty: config.difficulty,
+              playerColor: guestColor,
+              clockMinutes: config.clockMinutes,
+            });
+            engineRef.current?.setCameraPreset(guestColor === "b" ? "black" : "white");
+          },
+          onDisconnect: () => {
+            setNotice("Friend Disconnected");
+          },
+        });
+        multiplayerRef.current = service;
+        if (config.online?.isHost) {
+          service.createRoom(config.online.roomCode);
+        } else if (config.online?.roomCode) {
+          service.joinRoom(config.online.roomCode);
+        }
+      }
+
       controller.start({
         mode: config.mode,
         difficulty: config.difficulty,
@@ -426,10 +477,14 @@ export function GameShell() {
       });
       setPhase("playing");
     },
-    [controller, showcaseCamera, stopAttract],
+    [controller, settings, showcaseCamera, stopAttract],
   );
 
   const returnToMenu = useCallback(() => {
+    if (multiplayerRef.current) {
+      multiplayerRef.current.disconnect();
+      multiplayerRef.current = null;
+    }
     controller.stop();
     const engine = engineRef.current;
     engine?.setTacticalView(false);

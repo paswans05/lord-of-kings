@@ -1,17 +1,24 @@
-import { useState } from "react";
-import { Clapperboard, Crown, Swords, Settings as SettingsIcon, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Clapperboard, Crown, Swords, Settings as SettingsIcon, Users, Globe, Copy, Check, Link } from "lucide-react";
 
 import type { DemoOptions, Difficulty, Faction } from "../core/types";
+import { generateRoomCode } from "../core/multiplayer";
 import { Crest } from "./Heraldry";
 import { useHasKeyboard } from "./inputMode";
 import { MusterSection, type MusterChoice } from "./Muster";
 
+export interface OnlineMatchOptions {
+  roomCode: string;
+  isHost: boolean;
+}
+
 export interface MatchConfig {
-  mode: "ai" | "hotseat" | "demo";
+  mode: "ai" | "hotseat" | "demo" | "online";
   difficulty: Difficulty;
   playerColor: Faction;
   clockMinutes: number | null;
   demo?: DemoOptions;
+  online?: OnlineMatchOptions;
 }
 
 interface MainMenuProps {
@@ -46,7 +53,7 @@ const CLOCKS: { label: string; value: number | null }[] = [
 
 export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, onInteract }: MainMenuProps) {
   const hasKeyboard = useHasKeyboard();
-  const [tab, setTab] = useState<"ai" | "hotseat" | "demo">("ai");
+  const [tab, setTab] = useState<"ai" | "hotseat" | "demo" | "online">("ai");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [playerColor, setPlayerColor] = useState<Faction>("w");
   const [clock, setClock] = useState<number | null>(null);
@@ -55,14 +62,41 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
   const [demoSpeed, setDemoSpeed] = useState(1);
   const [demoLoop, setDemoLoop] = useState(true);
 
-  const start = (): void =>
+  // Online Multiplayer State
+  const [onlineTab, setOnlineTab] = useState<"create" | "join">("create");
+  const [hostCode, setHostCode] = useState<string>(() => generateRoomCode());
+  const [joinCode, setJoinCode] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get("room");
+    if (roomParam) {
+      setTab("online");
+      setOnlineTab("join");
+      setJoinCode(roomParam.toUpperCase());
+    }
+  }, []);
+
+  const copyInviteLink = (): void => {
+    const code = onlineTab === "create" ? hostCode : joinCode;
+    const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
+    void navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const start = (): void => {
+    const selectedCode = onlineTab === "create" ? hostCode : joinCode;
     onStart({
       mode: tab,
       difficulty,
       playerColor,
       clockMinutes: tab === "demo" ? null : clock,
       demo: tab === "demo" ? { white: demoWhite, black: demoBlack, speed: demoSpeed, autoRematch: demoLoop } : undefined,
+      online: tab === "online" ? { roomCode: selectedCode, isHost: onlineTab === "create" } : undefined,
     });
+  };
 
   return (
     <div
@@ -71,7 +105,9 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
       onPointerMove={onInteract}
     >
       <div className="mc-unfurl mc-menu-hero mb-6 shrink-0 text-center">
-        <p className="mc-display text-[0.68rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.5)]">KINGDOM OF MAGADHA</p>
+        <p className="mc-display text-[0.68rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.5)]">
+          KINGDOM OF MAGADHA
+        </p>
         <h1 className="mc-display mc-title-glow mt-2 text-5xl font-extrabold text-white sm:text-6xl">
           LORD OF KING&apos;S
         </h1>
@@ -82,10 +118,10 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
       </div>
 
       <div className="mc-slate mc-goldleaf mc-rise flex w-full min-h-0 max-w-md flex-col p-5 sm:p-6">
-        <div className="mb-5 grid shrink-0 grid-cols-3 gap-2">
+        <div className="mb-5 grid shrink-0 grid-cols-4 gap-1.5">
           <button
             type="button"
-            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3"
+            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
             data-active={tab === "ai"}
             onClick={() => setTab("ai")}
           >
@@ -93,7 +129,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
           </button>
           <button
             type="button"
-            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3"
+            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
             data-active={tab === "hotseat"}
             onClick={() => setTab("hotseat")}
           >
@@ -101,7 +137,15 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
           </button>
           <button
             type="button"
-            className="mc-chip flex items-center justify-center gap-1.5 px-1 py-3"
+            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
+            data-active={tab === "online"}
+            onClick={() => setTab("online")}
+          >
+            <Globe size={14} /> Online
+          </button>
+          <button
+            type="button"
+            className="mc-chip flex flex-col items-center justify-center gap-1 px-1 py-2.5 text-[0.6rem]"
             data-active={tab === "demo"}
             onClick={() => setTab("demo")}
           >
@@ -160,6 +204,87 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
               )}{" "}
               switch on the automatic swing in settings.
             </p>
+          ) : tab === "online" ? (
+            <div className="mc-fade space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className="mc-chip py-2"
+                  data-active={onlineTab === "create"}
+                  onClick={() => setOnlineTab("create")}
+                >
+                  Create Room
+                </button>
+                <button
+                  type="button"
+                  className="mc-chip py-2"
+                  data-active={onlineTab === "join"}
+                  onClick={() => setOnlineTab("join")}
+                >
+                  Join Room
+                </button>
+              </div>
+
+              {onlineTab === "create" ? (
+                <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+                  <p className="mc-display text-xs tracking-[0.2em] text-[#c084fc]">Room Invite Code</p>
+                  <p className="mc-display text-2xl font-bold tracking-[0.3em] text-white">{hostCode}</p>
+
+                  <button
+                    type="button"
+                    className="mc-btn flex w-full items-center justify-center gap-2 py-2 text-xs"
+                    onClick={copyInviteLink}
+                  >
+                    {copied ? <Check size={14} className="text-green-400" /> : <Link size={14} />}
+                    {copied ? "Invite Link Copied!" : "Copy Friend Invite Link"}
+                  </button>
+
+                  <p className="text-xs italic text-[#e0ebff]">
+                    Share code or link with your friend to connect instantly!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="mc-display text-xs tracking-[0.2em] text-[#c084fc]">Enter Friend&apos;s Room Code</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="mc-chip uppercase flex-1 px-3 py-2 text-center text-lg font-bold tracking-widest text-white outline-none focus:border-[#c084fc]"
+                      placeholder="e.g. 7X9K2A"
+                      maxLength={8}
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    />
+                    <button
+                      type="button"
+                      className="mc-btn px-3"
+                      onClick={copyInviteLink}
+                      title="Copy link"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className="mc-display mb-2 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Your banner</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["w", "b"] as Faction[]).map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className="mc-chip flex items-center justify-center gap-2 py-2.5"
+                      data-active={playerColor === color}
+                      onClick={() => setPlayerColor(color)}
+                    >
+                      <Crest faction={color} size={18} active={playerColor === color} />
+                      {color === "w" ? "Ivory" : "Obsidian"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="mc-fade space-y-5">
               <p className="text-sm italic leading-relaxed text-[#e0ebff]">
@@ -271,6 +396,10 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
             {tab === "demo" ? (
               <>
                 <Clapperboard size={16} /> Start AI vs AI
+              </>
+            ) : tab === "online" ? (
+              <>
+                <Globe size={16} /> {onlineTab === "create" ? "Host Friend Room" : "Join Friend Game"}
               </>
             ) : (
               <>

@@ -893,7 +893,7 @@ export class GameController extends Emitter<ControllerEvents> {
   private async maybeRunEngine(): Promise<void> {
     if (this.status !== "playing" || this.paused) return;
     const mode = this.options.mode;
-    if (mode === "hotseat") return;
+    if (mode === "hotseat" || mode === "online") return;
     const turn = this.chess.turn() as Faction;
     if (mode === "ai" && turn === this.options.playerColor) return;
     if (this.thinking) return;
