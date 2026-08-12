@@ -10,7 +10,7 @@ import type { ArmSculptSource } from "../scene/armoury";
 import type { ShotModelSource } from "../scene/gunfire";
 import type { WeaponId } from "../scene/weapons";
 
-const MODEL_BASE = "https://r2-pub.rork.com/generated-3d-models/g9111r67kl6tq85g540sd";
+const MODEL_BASE = `${import.meta.env.BASE_URL || "/"}models`.replace(/\/\//g, "/");
 
 /**
  * One army's sculpts. Every skin is a whole civilisation with its own roster of
@@ -463,7 +463,7 @@ export const PIECE_MODEL_ORIENTATION = {
   localUpAxis: "positiveY",
 } as const;
 
-const CRY_BASE = "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd";
+const CRY_BASE = `${import.meta.env.BASE_URL || "/"}cries`.replace(/\/\//g, "/");
 
 /**
  * One death cry per figure per army. They are voiced in character — the ivory
