@@ -389,7 +389,7 @@ export function Hud({
             </IconButton>
           ) : (
             <>
-              <IconButton
+              {/* <IconButton
                 label="Take back"
                 hint={
                   snapshot.canUndo
@@ -400,7 +400,7 @@ export function Hud({
                 disabled={!snapshot.canUndo}
               >
                 <RotateCcw size={16} />
-              </IconButton>
+              </IconButton> */}
               <IconButton
                 label="Resign"
                 hint={
@@ -904,9 +904,8 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
         <span>Command Status</span>
         <span className="flex items-center gap-1">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
+              }`}
           />
           <span className="text-[0.48rem] tracking-widest text-[#f2e2bd]">
             {isMyTurn ? "ACTIVE" : "WAITING"}
@@ -916,18 +915,17 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
 
       <div className="mt-1 flex items-center gap-2 py-1">
         <span
-          className={`h-2 w-2 shrink-0 rounded-full ${
-            isMyTurn
+          className={`h-2 w-2 shrink-0 rounded-full ${isMyTurn
               ? "bg-[#c084fc] shadow-[0_0_8px_rgba(192,132,252,0.8)]"
               : "bg-amber-400 animate-pulse"
-          }`}
+            }`}
         />
         <p className="mc-display text-[0.6rem] font-bold tracking-[0.16em] text-[#f2e2bd]">
           {isMyTurn
             ? "YOUR TURN — COMMAND YOUR ARMY"
             : snapshot.mode === "online"
-            ? "OPPONENT'S TURN — AWAITING MOVE"
-            : "OPPONENT IS THINKING…"}
+              ? "OPPONENT'S TURN — AWAITING MOVE"
+              : "OPPONENT IS THINKING…"}
         </p>
       </div>
     </div>
