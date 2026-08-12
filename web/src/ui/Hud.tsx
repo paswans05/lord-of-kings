@@ -24,6 +24,7 @@ import {
   Volume2,
   VolumeX,
   Wifi,
+  User,
   X,
 } from "lucide-react";
 
@@ -39,6 +40,8 @@ export interface OnlineHudInfo {
   isConnected: boolean;
   pingMs: number;
   roomCode: string;
+  opponentName?: string;
+  myCommanderName?: string;
 }
 
 interface HudProps {
@@ -309,7 +312,9 @@ export function Hud({
                 {demo
                   ? `AI vs AI · duel ${snapshot.demoRound}`
                   : snapshot.mode === "online"
-                    ? `Online Duel · ${onlineStatus?.roomCode || ""}`
+                    ? onlineStatus?.opponentName
+                      ? `VS COMMANDER ${onlineStatus.opponentName.toUpperCase()}`
+                      : `Online Duel · Room ${onlineStatus?.roomCode || ""}`
                     : snapshot.status === "over"
                       ? "Battle ended"
                       : snapshot.thinking
@@ -347,6 +352,15 @@ export function Hud({
         <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-1.5">
           {onlineStatus?.isOnline ? (
             <div className="mc-slate flex items-center gap-2 px-3 py-1.5 text-xs text-[#c084fc]">
+              <User size={13} className="text-[#c084fc]" />
+              <span className="font-semibold text-white">
+                {onlineStatus.isConnected
+                  ? onlineStatus.opponentName
+                    ? `VS ${onlineStatus.opponentName}`
+                    : "Friend Connected"
+                  : "Connecting..."}
+              </span>
+              <div className="h-3 w-[1px] bg-white/20" />
               <Wifi
                 size={14}
                 className={
@@ -358,9 +372,9 @@ export function Hud({
                 }
               />
               <span className="font-mono font-bold">
-                {onlineStatus.isConnected ? `${onlineStatus.pingMs} ms` : "Connecting..."}
+                {onlineStatus.isConnected ? `${onlineStatus.pingMs} ms` : "..."}
               </span>
-              <span className="opacity-60 text-[0.62rem] tracking-wider">({onlineStatus.roomCode})</span>
+              <span className="opacity-60 text-[0.62rem] tracking-wider font-mono">({onlineStatus.roomCode})</span>
             </div>
           ) : null}
           {snapshot.clock.enabled ? (

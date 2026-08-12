@@ -13,6 +13,7 @@ export interface NetworkHandshakePayload {
   type: "HANDSHAKE";
   playerColor: Faction;
   muster: MusterChoice;
+  playerName?: string;
 }
 
 export interface NetworkResignPayload {
@@ -43,16 +44,47 @@ export type NetworkMessage =
   | NetworkRoomFullPayload;
 
 export interface MultiplayerEvents {
+  onConnecting?: (attempt: number) => void;
   onConnect: () => void;
   onDisconnect: (reason?: string) => void;
   onMove: (from: SquareId, to: SquareId, promotion?: PieceKind) => void;
-  onHandshake: (color: Faction, muster: MusterChoice) => void;
+  onHandshake: (color: Faction, muster: MusterChoice, playerName?: string) => void;
   onResign: (color: Faction) => void;
   onPing: (pingMs: number) => void;
   onError: (error: string) => void;
 }
 
 const PEER_PREFIX = "lok3d-v1-";
+
+const PEER_CONFIG = {
+  debug: 1,
+  config: {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun3.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:19302" },
+      { urls: "stun:global.stun.twilio.com:3478" },
+      { urls: "stun:stun.services.mozilla.com" },
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
+    ],
+  },
+};
 
 export function generateRoomCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -89,10 +121,11 @@ export class MultiplayerService {
     this.setupBroadcastChannel(this.roomCode);
 
     try {
-      this.peer = new Peer(fullPeerId, { debug: 1 });
+      this.peer = new Peer(fullPeerId, PEER_CONFIG);
 
       this.peer.on("open", () => {
         console.log(`[Multiplayer] Room created: ${this.roomCode}`);
+        this.events.onConnecting?.(1);
       });
 
       this.peer.on("connection", (conn) => {
@@ -107,7 +140,12 @@ export class MultiplayerService {
       });
 
       this.peer.on("error", (err) => {
-        console.warn("[Multiplayer] PeerJS error, relying on BroadcastChannel fallback:", err);
+        console.warn("[Multiplayer] PeerJS error:", err);
+        if (err.type === "unavailable-id") {
+          this.events.onError?.("Room code already in use. Please create a new room.");
+        } else {
+          this.events.onError?.(`Network message: ${err.message || err.type}`);
+        }
       });
     } catch (e) {
       console.warn("[Multiplayer] PeerJS initialization fallback:", e);
@@ -128,33 +166,38 @@ export class MultiplayerService {
     const attemptConnect = (): void => {
       if (this.isConnected) return;
       this.joinAttempts += 1;
+      this.events.onConnecting?.(this.joinAttempts);
       console.log(`[Multiplayer] Connecting to host: ${this.roomCode} (attempt ${this.joinAttempts})`);
 
       try {
         if (this.peer && !this.peer.destroyed) {
-          const conn = this.peer.connect(fullPeerId);
+          const conn = this.peer.connect(fullPeerId, { reliable: true });
           this.bindConnection(conn);
         } else {
-          this.peer = new Peer({ debug: 1 });
+          if (this.peer) {
+            try { this.peer.destroy(); } catch {}
+          }
+          this.peer = new Peer(PEER_CONFIG);
 
           this.peer.on("open", () => {
             if (!this.peer || this.isConnected) return;
-            const conn = this.peer.connect(fullPeerId);
+            const conn = this.peer.connect(fullPeerId, { reliable: true });
             this.bindConnection(conn);
           });
 
           this.peer.on("error", (err) => {
-            console.warn(`[Multiplayer] PeerJS connect info (attempt ${this.joinAttempts}):`, err.message);
-            // Retries every 2.5 seconds up to 12 attempts until host is active
-            if (!this.isConnected && this.joinAttempts < 12) {
-              this.retryTimer = setTimeout(attemptConnect, 2500);
+            console.warn(`[Multiplayer] PeerJS connect info (attempt ${this.joinAttempts}):`, err.message || err.type);
+            if (!this.isConnected && this.joinAttempts < 15) {
+              this.retryTimer = setTimeout(attemptConnect, 2000);
+            } else if (!this.isConnected) {
+              this.events.onError?.("Could not connect to room. Ensure host is in game room.");
             }
           });
         }
       } catch (e) {
         console.warn("[Multiplayer] PeerJS join fallback:", e);
-        if (!this.isConnected && this.joinAttempts < 12) {
-          this.retryTimer = setTimeout(attemptConnect, 2500);
+        if (!this.isConnected && this.joinAttempts < 15) {
+          this.retryTimer = setTimeout(attemptConnect, 2000);
         }
       }
     };
@@ -242,7 +285,7 @@ export class MultiplayerService {
   private handleMessage(msg: NetworkMessage): void {
     switch (msg.type) {
       case "HANDSHAKE":
-        this.events.onHandshake?.(msg.playerColor, msg.muster);
+        this.events.onHandshake?.(msg.playerColor, msg.muster, msg.playerName);
         break;
       case "MOVE":
         this.events.onMove?.(msg.from, msg.to, msg.promotion);
@@ -274,8 +317,8 @@ export class MultiplayerService {
     this.events.onError?.("⚠️ ROOM IS FULL! This match already has 2 commanders playing.");
   }
 
-  public sendHandshake(playerColor: Faction, muster: MusterChoice): void {
-    const payload: NetworkHandshakePayload = { type: "HANDSHAKE", playerColor, muster };
+  public sendHandshake(playerColor: Faction, muster: MusterChoice, playerName?: string): void {
+    const payload: NetworkHandshakePayload = { type: "HANDSHAKE", playerColor, muster, playerName };
     this.send(payload);
   }
 

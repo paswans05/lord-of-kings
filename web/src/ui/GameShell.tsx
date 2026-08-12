@@ -16,7 +16,7 @@ import { ARENA_LOOKS, DEFAULT_ARENA } from "../scene/arena";
 import { detectQualityPreset, type QualityPreset } from "../scene/quality";
 import { SceneEngine, type CameraPreset, type ShowcaseCamera } from "../scene/sceneEngine";
 import { GameOverModal } from "./GameOverModal";
-import { Hud } from "./Hud";
+import { Hud, type OnlineHudInfo } from "./Hud";
 import { useHasKeyboard } from "./inputMode";
 import { MainMenu, type MatchConfig } from "./MainMenu";
 import type { MusterChoice } from "./Muster";
@@ -254,12 +254,7 @@ export function GameShell() {
   const [tactical, setTactical] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [onlineInfo, setOnlineInfo] = useState<{
-    isOnline: boolean;
-    isConnected: boolean;
-    pingMs: number;
-    roomCode: string;
-  }>({
+  const [onlineInfo, setOnlineInfo] = useState<OnlineHudInfo>({
     isOnline: false,
     isConnected: false,
     pingMs: 0,
@@ -447,18 +442,29 @@ export function GameShell() {
           isConnected: false,
           pingMs: 0,
           roomCode: config.online?.roomCode || "",
+          opponentName: undefined,
+          myCommanderName: config.online?.playerName || "Commander",
         });
 
         if (multiplayerRef.current) {
           multiplayerRef.current.disconnect();
         }
         const service = new MultiplayerService({
+          onConnecting: (attempt) => {
+            if (config.online?.isHost) {
+              setNotice(`⏳ Waiting for friend to join room ${config.online.roomCode}...`);
+            } else {
+              setNotice(`🔄 Connecting to friend's room ${config.online?.roomCode}... (attempt ${attempt})`);
+            }
+          },
           onConnect: () => {
-            setNotice("⚡ FRIEND CONNECTED & LIVE!");
-            setTimeout(() => setNotice(null), 4000);
             setOnlineInfo((prev) => ({ ...prev, isConnected: true }));
             if (config.online?.isHost) {
-              service.sendHandshake(config.playerColor, { arena: settings.arena, skins: settings.skins });
+              service.sendHandshake(
+                config.playerColor,
+                { arena: settings.arena, skins: settings.skins },
+                config.online.playerName
+              );
             }
           },
           onPing: (pingMs) => {
@@ -470,17 +476,28 @@ export function GameShell() {
               isReceivingNetworkMove.current = false;
             });
           },
-          onHandshake: (hostColor) => {
-            setNotice("⚡ JOINED FRIEND ROOM!");
+          onHandshake: (hostColor, _muster, senderPlayerName) => {
+            const oppName = senderPlayerName || "Friend";
+            setOnlineInfo((prev) => ({ ...prev, opponentName: oppName }));
+            setNotice(`⚡ CONNECTED WITH COMMANDER ${oppName.toUpperCase()}!`);
             setTimeout(() => setNotice(null), 4000);
-            const guestColor: Faction = hostColor === "w" ? "b" : "w";
-            controller.start({
-              mode: "online",
-              difficulty: config.difficulty,
-              playerColor: guestColor,
-              clockMinutes: config.clockMinutes,
-            });
-            engineRef.current?.setCameraPreset(guestColor === "b" ? "black" : "white");
+
+            if (!config.online?.isHost) {
+              const guestColor: Faction = hostColor === "w" ? "b" : "w";
+              // Send guest handshake reply so host gets guest's commander name
+              service.sendHandshake(
+                guestColor,
+                { arena: settings.arena, skins: settings.skins },
+                config.online?.playerName
+              );
+              controller.start({
+                mode: "online",
+                difficulty: config.difficulty,
+                playerColor: guestColor,
+                clockMinutes: config.clockMinutes,
+              });
+              engineRef.current?.setCameraPreset(guestColor === "b" ? "black" : "white");
+            }
           },
           onDisconnect: () => {
             setNotice("Friend Disconnected");
