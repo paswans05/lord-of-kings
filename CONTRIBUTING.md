@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking an interest in Lord Of Kings. This document covers the workflow, the coding
+Thanks for taking an interest in Kings Fall. This document covers the workflow, the coding
 conventions and — importantly for this repository — the **commit message format**.
 
 ## Getting set up

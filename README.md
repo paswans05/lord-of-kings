@@ -1,4 +1,4 @@
-# Lord Of Kings — Dravida 3D Chess
+# Kings Fall — Dravida 3D Chess
 
 A cinematic 3D chess game in the browser. Four rival Indian civilisations — the **Dravida Kingdom**, the **Kalinga Sun Empire**, the **Maratha Empire**, and the **Kingdom of Magadha** —
 face each other as sculpted, rigged characters that march, strike, scream and burn away into
@@ -1604,7 +1604,7 @@ this repository.
 
 ## License
 
-[MIT](LICENSE) © the Lord Of Kings contributors.
+[MIT](LICENSE) © the Kings Fall contributors.
 
 Bundled dependencies keep their own licences: three.js (MIT), chess.js (BSD-2-Clause),
 React (MIT), Tailwind CSS (MIT), Radix UI / shadcn/ui (MIT), lucide (ISC).

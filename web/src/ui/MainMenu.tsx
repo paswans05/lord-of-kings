@@ -120,10 +120,10 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
     >
       <div className="mc-unfurl mc-menu-hero mb-6 shrink-0 text-center">
         <p className="mc-display text-[0.68rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.5)]">
-          KINGDOM OF MAGADHA
+          DRAVIDA 3D CHESS
         </p>
         <h1 className="mc-display mc-title-glow mt-2 text-5xl font-extrabold text-white sm:text-6xl">
-          LORD OF KING&apos;S
+          KING&apos;S FALL
         </h1>
         <div className="mc-rule mx-auto mt-3 w-64" />
         <p className="mt-3 text-sm italic text-[#e2ebfc]">

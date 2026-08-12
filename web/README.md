@@ -1,4 +1,4 @@
-# Lord Of Kings — the app
+# Kings Fall — the app
 
 This folder holds the game itself. For the project overview, features, architecture notes and
 contribution guide, read the [root README](../README.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
