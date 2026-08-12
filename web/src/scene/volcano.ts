@@ -130,7 +130,7 @@ export class VolcanoOverlay {
   applyQuality(preset: QualityPreset): void {
     const q = QUALITY_SETTINGS[preset];
     if (this.embers) {
-      const count = Math.min(MAX_EMBERS, Math.floor(MAX_EMBERS * q.shadowResolution / 2048));
+      const count = Math.min(MAX_EMBERS, Math.floor((MAX_EMBERS * q.shadowMapSize) / 2048));
       this.embers.geometry.setDrawRange(0, count);
     }
   }
