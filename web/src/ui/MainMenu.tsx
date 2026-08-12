@@ -63,7 +63,7 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
   const [onlineTab, setOnlineTab] = useState<"create" | "join">("create");
   const [hostCode, setHostCode] = useState<string>(() => generateRoomCode());
   const [joinCode, setJoinCode] = useState<string>("");
-  const [copied, setCopied] = useState<boolean>(false);
+  const [copiedMode, setCopiedMode] = useState<"code" | "link" | null>(null);
   const [playerName, setPlayerName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return window.localStorage.getItem("kg.playername") || "Commander";
@@ -90,12 +90,18 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
     }
   }, []);
 
+  const copyCodeOnly = (): void => {
+    void navigator.clipboard.writeText(hostCode);
+    setCopiedMode("code");
+    setTimeout(() => setCopiedMode(null), 2500);
+  };
+
   const copyInviteLink = (): void => {
     const code = onlineTab === "create" ? hostCode : joinCode;
     const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
     void navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setCopiedMode("link");
+    setTimeout(() => setCopiedMode(null), 2500);
   };
 
   const start = (): void => {
@@ -247,24 +253,43 @@ export function MainMenu({ onStart, onOpenSettings, muster, onMuster, attract, o
                 </button>
               </div>
 
-              {onlineTab === "create" ? (
-                <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-                  <p className="mc-display text-xs tracking-[0.2em] text-[#c084fc]">Room Invite Code</p>
-                  <p className="mc-display text-2xl font-bold tracking-[0.3em] text-white">{hostCode}</p>
+              {onlineTab === "create" ? (<></>
+                // <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+                //   <p className="mc-display text-xs tracking-[0.2em] text-[#c084fc]">Room Invite Code</p>
+                //   <button
+                //     type="button"
+                //     onClick={copyCodeOnly}
+                //     className="mc-display text-2xl font-bold tracking-[0.3em] text-white hover:text-[#c084fc] transition-colors cursor-pointer w-full py-1 rounded-lg border border-transparent hover:border-[#c084fc]/40 hover:bg-[#c084fc]/10 flex items-center justify-center gap-2 group"
+                //     title="Click to copy code"
+                //   >
+                //     <span>{hostCode}</span>
+                //     <Copy size={16} className="opacity-60 group-hover:opacity-100 text-[#c084fc]" />
+                //   </button>
 
-                  <button
-                    type="button"
-                    className="mc-btn flex w-full items-center justify-center gap-2 py-2 text-xs"
-                    onClick={copyInviteLink}
-                  >
-                    {copied ? <Check size={14} className="text-green-400" /> : <Link size={14} />}
-                    {copied ? "Invite Link Copied!" : "Copy Friend Invite Link"}
-                  </button>
+                //   <div className="grid grid-cols-2 gap-2 pt-1">
+                //     <button
+                //       type="button"
+                //       className="mc-btn flex items-center justify-center gap-1.5 py-2 text-xs"
+                //       onClick={copyCodeOnly}
+                //     >
+                //       {copiedMode === "code" ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                //       {copiedMode === "code" ? "Code Copied!" : "Copy Code"}
+                //     </button>
 
-                  <p className="text-xs italic text-[#e0ebff]">
-                    Share code or link with your friend to connect instantly!
-                  </p>
-                </div>
+                //     <button
+                //       type="button"
+                //       className="mc-btn flex items-center justify-center gap-1.5 py-2 text-xs mc-btn-primary"
+                //       onClick={copyInviteLink}
+                //     >
+                //       {copiedMode === "link" ? <Check size={14} className="text-emerald-400" /> : <Link size={14} />}
+                //       {copiedMode === "link" ? "Link Copied!" : "Copy Invite Link"}
+                //     </button>
+                //   </div>
+
+                //   <p className="text-xs italic text-[#e0ebff]">
+                //     Share code or link with your friend to connect instantly!
+                //   </p>
+                // </div>
               ) : (
                 <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="mc-display text-xs tracking-[0.2em] text-[#c084fc]">Enter Friend&apos;s Room Code</p>

@@ -35,6 +35,9 @@ import {
   Sparkles,
   Crown,
   Shield,
+  Copy,
+  Check,
+  Link,
 } from "lucide-react";
 
 import type { ElapsedState, Faction, GameSnapshot, LedgerMove, PieceKind } from "../core/types";
@@ -396,7 +399,7 @@ export function Hud({
               <span className="font-mono font-bold">
                 {onlineStatus.isConnected ? `${onlineStatus.pingMs} ms` : "..."}
               </span>
-              <span className="opacity-60 text-[0.62rem] tracking-wider font-mono">({onlineStatus.roomCode})</span>
+              {onlineStatus.roomCode ? <RoomBadge roomCode={onlineStatus.roomCode} /> : null}
             </div>
           ) : null}
           {snapshot.clock.enabled ? (
@@ -931,6 +934,39 @@ function IconButton({
   );
 }
 
+function RoomBadge({ roomCode }: { roomCode: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    void navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="mc-chip flex items-center gap-1 px-2 py-0.5 text-[0.62rem] font-mono tracking-wider text-[#ffffff] border border-[#7e22ce]/50 bg-[#581c87]/30 hover:border-[#9333ea] hover:bg-[#7e22ce]/40  transition-all cursor-pointer rounded-md"
+      title="Click to copy Friend Invite Link"
+    >
+      {copied ? (
+        <>
+          <Check size={11} className="text-emerald-400" />
+          <span className="font-bold text-emerald-400">COPIED LINK!</span>
+        </>
+      ) : (
+        <>
+          <Link size={10} className="text-[#c084fc]" />
+          <span className="font-bold">ROOM: {roomCode}</span>
+        </>
+      )}
+    </button>
+  );
+}
+
 /**
  * Command status banner matching the exact slate card UI styling of FieldTally.
  */
@@ -943,9 +979,8 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
         <span>Command Status</span>
         <span className="flex items-center gap-1">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
+              }`}
           />
           <span className="text-[0.48rem] tracking-widest text-[#f2e2bd]">
             {isMyTurn ? "ACTIVE" : "WAITING"}
@@ -955,18 +990,17 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
 
       <div className="mt-1 flex items-center gap-2 py-1">
         <span
-          className={`h-2 w-2 shrink-0 rounded-full ${
-            isMyTurn
-              ? "bg-[#c084fc] shadow-[0_0_8px_rgba(192,132,252,0.8)]"
-              : "bg-amber-400 animate-pulse"
-          }`}
+          className={`h-2 w-2 shrink-0 rounded-full ${isMyTurn
+            ? "bg-[#c084fc] shadow-[0_0_8px_rgba(192,132,252,0.8)]"
+            : "bg-amber-400 animate-pulse"
+            }`}
         />
         <p className="mc-display text-[0.6rem] font-bold tracking-[0.16em] text-[#f2e2bd]">
           {isMyTurn
             ? "YOUR TURN — COMMAND YOUR ARMY"
             : snapshot.mode === "online"
-            ? "OPPONENT'S TURN — AWAITING MOVE"
-            : "OPPONENT IS THINKING…"}
+              ? "OPPONENT'S TURN — AWAITING MOVE"
+              : "OPPONENT IS THINKING…"}
         </p>
       </div>
     </div>
@@ -1110,11 +1144,10 @@ function RoomChat({
                     {msg.isSelf && <Shield size={9} className="text-[#c084fc]" />}
                   </div>
                   <div
-                    className={`px-3 py-1.5 max-w-[85%] text-[0.75rem] leading-snug break-words shadow-sm ${
-                      msg.isSelf
-                        ? "bg-gradient-to-r from-[#7e22ce]/60 to-[#a855f7]/60 text-white border border-[#c084fc]/50 rounded-2xl rounded-tr-xs shadow-[0_0_12px_rgba(192,132,252,0.2)]"
-                        : "bg-white/10 text-[#f2e2bd] border border-white/15 rounded-2xl rounded-tl-xs backdrop-blur-md"
-                    }`}
+                    className={`px-3 py-1.5 max-w-[85%] text-[0.75rem] leading-snug break-words shadow-sm ${msg.isSelf
+                      ? "bg-gradient-to-r from-[#7e22ce]/60 to-[#a855f7]/60 text-white border border-[#c084fc]/50 rounded-2xl rounded-tr-xs shadow-[0_0_12px_rgba(192,132,252,0.2)]"
+                      : "bg-white/10 text-[#f2e2bd] border border-white/15 rounded-2xl rounded-tl-xs backdrop-blur-md"
+                      }`}
                   >
                     {msg.text}
                   </div>
@@ -1162,11 +1195,10 @@ function RoomChat({
         {/* Voice Chat Button */}
         <button
           type="button"
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${
-            voiceActive
-              ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-              : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
-          }`}
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${voiceActive
+            ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+            : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
+            }`}
           onClick={onToggleVoiceCall}
           title={voiceActive ? "Disconnect Voice Chat" : "Start WebRTC Voice Call"}
         >
@@ -1193,11 +1225,10 @@ function RoomChat({
         {voiceActive && (
           <button
             type="button"
-            className={`flex items-center justify-center rounded-lg px-2 py-1 text-[0.65rem] font-bold transition-all active:scale-95 ${
-              micMuted
-                ? "bg-rose-500/30 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
-                : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-            }`}
+            className={`flex items-center justify-center rounded-lg px-2 py-1 text-[0.65rem] font-bold transition-all active:scale-95 ${micMuted
+              ? "bg-rose-500/30 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+              }`}
             onClick={onToggleMic}
             title={micMuted ? "Unmute Microphone" : "Mute Microphone"}
           >
