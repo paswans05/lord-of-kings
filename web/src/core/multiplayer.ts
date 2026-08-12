@@ -47,6 +47,11 @@ export interface NetworkRoomFullPayload {
   type: "ROOM_FULL";
 }
 
+export interface NetworkPremiumStatusPayload {
+  type: "PREMIUM_STATUS";
+  isUnlocked: boolean;
+}
+
 export type NetworkMessage =
   | NetworkMovePayload
   | NetworkHandshakePayload
@@ -55,7 +60,8 @@ export type NetworkMessage =
   | NetworkChatPayload
   | NetworkPingPayload
   | NetworkPongPayload
-  | NetworkRoomFullPayload;
+  | NetworkRoomFullPayload
+  | NetworkPremiumStatusPayload;
 
 export interface MultiplayerEvents {
   onConnecting?: (attempt: number) => void;
@@ -67,6 +73,7 @@ export interface MultiplayerEvents {
   onUndo?: (count?: number) => void;
   onChatMessage?: (msg: { text: string; sender: string; t: number }) => void;
   onVoiceStateChange?: (active: boolean, micMuted: boolean) => void;
+  onPremiumStatus?: (isUnlocked: boolean) => void;
   onPing: (pingMs: number) => void;
   onError: (error: string) => void;
 }
@@ -316,6 +323,9 @@ export class MultiplayerService {
       case "CHAT":
         this.events.onChatMessage?.({ text: msg.text, sender: msg.sender, t: msg.t });
         break;
+      case "PREMIUM_STATUS":
+        this.events.onPremiumStatus?.(msg.isUnlocked);
+        break;
       case "PING":
         this.send({ type: "PONG", t: msg.t });
         break;
@@ -355,8 +365,13 @@ export class MultiplayerService {
     this.send(payload);
   }
 
-  public sendUndo(count = 1): void {
+  public sendUndo(count?: number): void {
     const payload: NetworkUndoPayload = { type: "UNDO", count };
+    this.send(payload);
+  }
+
+  public sendPremiumStatus(isUnlocked: boolean): void {
+    const payload: NetworkPremiumStatusPayload = { type: "PREMIUM_STATUS", isUnlocked };
     this.send(payload);
   }
 

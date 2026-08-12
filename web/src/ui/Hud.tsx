@@ -73,6 +73,7 @@ interface HudProps {
   voiceActive?: boolean;
   micMuted?: boolean;
   isPremium?: boolean;
+  isHost?: boolean;
   onOpenRazorpayModal?: () => void;
   onSendChat?: (text: string) => void;
   onToggleMic?: () => void;
@@ -199,6 +200,7 @@ export function Hud({
   voiceActive = false,
   micMuted = false,
   isPremium = false,
+  isHost = false,
   onOpenRazorpayModal,
   onSendChat,
   onToggleMic,
@@ -380,6 +382,7 @@ export function Hud({
             voiceActive={voiceActive}
             micMuted={micMuted}
             isPremium={isPremium}
+            isHost={isHost}
             onOpenRazorpayModal={onOpenRazorpayModal}
             onSendChat={onSendChat}
             onToggleMic={onToggleMic}
@@ -1039,6 +1042,7 @@ function RoomChat({
   voiceActive = false,
   micMuted = false,
   isPremium = false,
+  isHost = false,
   onOpenRazorpayModal,
   onSendChat,
   onToggleMic,
@@ -1050,6 +1054,7 @@ function RoomChat({
   voiceActive?: boolean;
   micMuted?: boolean;
   isPremium?: boolean;
+  isHost?: boolean;
   onOpenRazorpayModal?: () => void;
   onSendChat?: (text: string) => void;
   onToggleMic?: () => void;
@@ -1288,9 +1293,10 @@ function RoomChat({
             type="button"
             onClick={onOpenRazorpayModal}
             className="mc-pulse flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-500 to-purple-600 px-2.5 py-1 text-[0.62rem] font-extrabold text-white shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:brightness-110 active:scale-95 cursor-pointer"
+            title={isHost ? "Host: Unlock Room Voice & Chat (₹10)" : "Waiting for Host to pay ₹10 to unlock Voice & Chat"}
           >
             <Sparkles size={11} className="animate-spin" />
-            <span>UNLOCK (10 ₹)</span>
+            <span>{isHost ? "UNLOCK (10 ₹)" : "WAITING HOST ₹10"}</span>
           </button>
         )}
       </div>

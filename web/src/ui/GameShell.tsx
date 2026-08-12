@@ -264,7 +264,8 @@ export function GameShell() {
   const [chatMessages, setChatMessages] = useState<import("./Hud").ChatMessage[]>([]);
   const [voiceActive, setVoiceActive] = useState<boolean>(false);
   const [micMuted, setMicMuted] = useState<boolean>(false);
-  const [isPremium, setIsPremium] = useState<boolean>(() => isPremiumCommsUnlocked());
+  const [isHost, setIsHost] = useState<boolean>(false);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
   const [showRazorpay, setShowRazorpay] = useState<boolean>(false);
   /** Showcase recording: strips every panel so the capture is board-only. */
   const [cinema, setCinema] = useState(false);
@@ -443,6 +444,10 @@ export function GameShell() {
       }
 
       if (config.mode === "online") {
+        const hostFlag = config.online?.isHost ?? false;
+        setIsHost(hostFlag);
+        setIsPremium(hostFlag ? isPremiumCommsUnlocked() : false);
+
         setOnlineInfo({
           isOnline: true,
           isConnected: false,
@@ -471,6 +476,9 @@ export function GameShell() {
                 { arena: settings.arena, skins: settings.skins },
                 config.online.playerName
               );
+              if (isPremiumCommsUnlocked()) {
+                service.sendPremiumStatus(true);
+              }
             }
           },
           onPing: (pingMs) => {
@@ -529,6 +537,13 @@ export function GameShell() {
           onVoiceStateChange: (active, muted) => {
             setVoiceActive(active);
             setMicMuted(muted);
+          },
+          onPremiumStatus: (unlocked) => {
+            setIsPremium(unlocked);
+            if (unlocked) {
+              setNotice("👑 HOST UNLOCKED ROOM VOICE & CHAT!");
+              setTimeout(() => setNotice(null), 4000);
+            }
           },
           onDisconnect: () => {
             setNotice("Friend Disconnected");
@@ -631,10 +646,19 @@ export function GameShell() {
     }
   }, [controller, snapshot.turn]);
 
+  const handleOpenRazorpay = useCallback(() => {
+    if (!isHost && !isPremium) {
+      setNotice("👑 Waiting for Room Host to pay ₹10 to unlock Voice & Chat");
+      setTimeout(() => setNotice(null), 4000);
+      return;
+    }
+    setShowRazorpay(true);
+  }, [isHost, isPremium]);
+
   const handleSendChat = useCallback(
     (text: string) => {
-      if (!isPremiumCommsUnlocked()) {
-        setShowRazorpay(true);
+      if (!isPremium) {
+        handleOpenRazorpay();
         return;
       }
       if (!text.trim() || !multiplayerRef.current) return;
@@ -646,12 +670,12 @@ export function GameShell() {
         { id: `${Date.now()}-${Math.random()}`, sender: myName, text: text.trim(), time: timeStr, isSelf: true },
       ]);
     },
-    [onlineInfo.myCommanderName],
+    [isPremium, handleOpenRazorpay, onlineInfo.myCommanderName],
   );
 
   const handleToggleMic = useCallback(() => {
-    if (!isPremiumCommsUnlocked()) {
-      setShowRazorpay(true);
+    if (!isPremium) {
+      handleOpenRazorpay();
       return;
     }
     if (multiplayerRef.current) {
@@ -659,11 +683,11 @@ export function GameShell() {
       setMicMuted(muted);
       audio.blip("press");
     }
-  }, []);
+  }, [isPremium, handleOpenRazorpay]);
 
   const handleToggleVoiceCall = useCallback(async () => {
-    if (!isPremiumCommsUnlocked()) {
-      setShowRazorpay(true);
+    if (!isPremium) {
+      handleOpenRazorpay();
       return;
     }
     if (!multiplayerRef.current) return;
@@ -677,7 +701,7 @@ export function GameShell() {
         setTimeout(() => setNotice(null), 3000);
       }
     }
-  }, [voiceActive]);
+  }, [isPremium, handleOpenRazorpay, voiceActive]);
 
   const handleRematch = useCallback(() => {
     const current = controller.getSnapshot();
@@ -873,7 +897,8 @@ export function GameShell() {
             voiceActive={voiceActive}
             micMuted={micMuted}
             isPremium={isPremium}
-            onOpenRazorpayModal={() => setShowRazorpay(true)}
+            isHost={isHost}
+            onOpenRazorpayModal={handleOpenRazorpay}
             onSendChat={handleSendChat}
             onToggleMic={handleToggleMic}
             onToggleVoiceCall={handleToggleVoiceCall}
@@ -972,7 +997,10 @@ export function GameShell() {
           onClose={() => setShowRazorpay(false)}
           onSuccess={() => {
             setIsPremium(true);
-            setNotice("👑 PREMIUM BATTLE PASS UNLOCKED! (₹10 PAID)");
+            if (multiplayerRef.current) {
+              multiplayerRef.current.sendPremiumStatus(true);
+            }
+            setNotice("👑 PREMIUM ROOM COMMS UNLOCKED! (₹10 PAID)");
             setTimeout(() => setNotice(null), 4000);
           }}
           playerName={onlineInfo.myCommanderName}
