@@ -323,7 +323,13 @@ export function Hud({
       {/* Padding (including the notch/home-bar insets) lives in `.mc-hud-top`. */}
       <div className="mc-hud-top pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col items-start gap-1.5">
-          <div className="mc-hud-status mc-slate mc-goldleaf pointer-events-auto flex items-center gap-3 px-3 py-2.5">
+          <div
+            className={`mc-hud-status mc-slate mc-goldleaf pointer-events-auto flex items-center gap-3 px-3 py-2.5 transition-all duration-300 ${
+              isMyTurn && snapshot.status === "playing"
+                ? "border-[#c084fc] shadow-[0_0_25px_rgba(192,132,252,0.65)] ring-1 ring-[#c084fc]/50"
+                : ""
+            }`}
+          >
             <Crest faction={snapshot.turn} size={26} active />
             <div>
               <p className="mc-display text-[0.58rem] tracking-[0.3em] text-[#a89268]">
@@ -332,7 +338,7 @@ export function Hud({
                   : snapshot.mode === "online"
                     ? onlineStatus?.opponentName
                       ? `VS COMMANDER ${onlineStatus.opponentName.toUpperCase()}`
-                      : `Online Duel · Room ${onlineStatus?.roomCode || ""}`
+                      : `Online Duel`
                     : snapshot.status === "over"
                       ? "Battle ended"
                       : snapshot.thinking
@@ -350,7 +356,8 @@ export function Hud({
               </p>
             </div>
             {isMyTurn && snapshot.status === "playing" ? (
-              <span className="mc-display rounded-md border border-[#c084fc] bg-[#c084fc]/20 px-2 py-1 text-[0.58rem] font-bold tracking-[0.2em] text-[#e9d5ff] shadow-[0_0_12px_rgba(192,132,252,0.5)]">
+              <span className="mc-display flex items-center gap-1.5 rounded-lg border-2 border-[#c084fc] bg-gradient-to-r from-[#7e22ce]/80 via-[#9333ea]/80 to-[#c084fc]/80 px-2.5 py-1 text-[0.62rem] font-extrabold tracking-[0.22em] text-white shadow-[0_0_20px_rgba(192,132,252,0.9)] animate-pulse">
+                <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
                 YOUR TURN
               </span>
             ) : null}
@@ -365,7 +372,7 @@ export function Hud({
           </div>
 
           <FieldTally snapshot={snapshot} getElapsed={getElapsed} />
-          <TurnBanner snapshot={snapshot} isMyTurn={isMyTurn} />
+          {/* <TurnBanner snapshot={snapshot} isMyTurn={isMyTurn} /> */}
           <RoomChat
             snapshot={snapshot}
             onlineStatus={onlineStatus}
@@ -1217,11 +1224,10 @@ function RoomChat({
         {/* Voice Chat Button */}
         <button
           type="button"
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${
-            voiceActive
-              ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-              : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
-          }`}
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${voiceActive
+            ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+            : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
+            }`}
           onClick={handleVoiceCallClick}
           title={!isPremium ? "Unlock Voice Chat (₹10 Razorpay)" : voiceActive ? "Disconnect Voice Chat" : "Start WebRTC Voice Call"}
         >

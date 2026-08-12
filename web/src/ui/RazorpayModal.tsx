@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, ShieldCheck, Sparkles, X, Mic, MessageSquare, CreditCard } from "lucide-react";
+import { Check, ShieldCheck, Sparkles, X, Mic, MessageSquare, CreditCard, Mail } from "lucide-react";
 
 declare global {
   interface Window {
@@ -29,6 +29,12 @@ interface RazorpayModalProps {
 
 export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Commander" }: RazorpayModalProps) {
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("kg.payment_email") || "";
+    }
+    return "";
+  });
 
   useEffect(() => {
     // Pre-load Razorpay checkout script
@@ -44,6 +50,12 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
 
   const handleRazorpayPayment = () => {
     setLoading(true);
+
+    if (email.trim() && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("kg.payment_email", email.trim());
+      } catch {}
+    }
 
     const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_DravidaChess10";
 
@@ -63,7 +75,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
       },
       prefill: {
         name: playerName,
-        email: `${playerName.toLowerCase().replace(/\s+/g, "")}@dravida.com`,
+        email: email.trim() || `${playerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
         contact: "9999999999",
       },
       theme: {
@@ -92,6 +104,11 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
 
   const simulatePayment = () => {
     setLoading(true);
+    if (email.trim() && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("kg.payment_email", email.trim());
+      } catch {}
+    }
     setTimeout(() => {
       unlockPremiumComms();
       setLoading(false);
@@ -126,12 +143,12 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
             Unlock Voice Calls & Unlimited Text Chat with friends
           </p>
 
-          <div className="my-4 flex items-baseline gap-1 rounded-xl bg-[#c084fc]/15 border border-[#c084fc]/40 px-5 py-2">
+          <div className="my-3 flex items-baseline gap-1 rounded-xl bg-[#c084fc]/15 border border-[#c084fc]/40 px-5 py-1.5">
             <span className="text-3xl font-black text-[#f2e2bd]">₹10</span>
             <span className="text-xs font-semibold text-[#c084fc]">INR (Lifetime Access)</span>
           </div>
 
-          <div className="w-full space-y-2 text-left text-xs text-[#f2e2bd] my-2 bg-white/5 p-3.5 rounded-xl border border-white/10">
+          <div className="w-full space-y-2 text-left text-xs text-[#f2e2bd] my-1 bg-white/5 p-3 rounded-xl border border-white/10">
             <div className="flex items-center gap-2.5">
               <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                 <Mic size={12} />
@@ -152,7 +169,24 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
             </div>
           </div>
 
-          <div className="w-full space-y-2 mt-3">
+          {/* Email Address Field */}
+          <div className="w-full text-left my-2 space-y-1">
+            <label className="text-[0.62rem] font-bold tracking-wider text-[#c084fc] uppercase">
+              Your Email Address (for Payment Receipt)
+            </label>
+            <div className="relative flex items-center">
+              <Mail size={14} className="absolute left-3 text-[#c084fc]" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="commander@gmail.com"
+                className="w-full rounded-xl border border-white/15 bg-black/40 pl-9 pr-3 py-2 text-xs font-semibold text-white placeholder-white/40 outline-none focus:border-[#c084fc] focus:ring-1 focus:ring-[#c084fc] transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="w-full space-y-2 mt-2">
             <button
               type="button"
               onClick={handleRazorpayPayment}
