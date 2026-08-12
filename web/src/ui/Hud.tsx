@@ -25,7 +25,16 @@ import {
   VolumeX,
   Wifi,
   User,
+  Mic,
+  MicOff,
+  MessageSquare,
+  Send,
+  Phone,
+  PhoneOff,
   X,
+  Sparkles,
+  Crown,
+  Shield,
 } from "lucide-react";
 
 import type { ElapsedState, Faction, GameSnapshot, LedgerMove, PieceKind } from "../core/types";
@@ -44,11 +53,25 @@ export interface OnlineHudInfo {
   myCommanderName?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  time: string;
+  isSelf: boolean;
+}
+
 interface HudProps {
   snapshot: GameSnapshot;
   onlineStatus?: OnlineHudInfo;
   muted: boolean;
   fps: number;
+  chatMessages?: ChatMessage[];
+  voiceActive?: boolean;
+  micMuted?: boolean;
+  onSendChat?: (text: string) => void;
+  onToggleMic?: () => void;
+  onToggleVoiceCall?: () => void;
   onNewGame: () => void;
   onUndo: () => void;
   onResign: () => void;
@@ -167,6 +190,12 @@ export function Hud({
   onShowcaseCamera,
   onToggleCinema,
   getElapsed,
+  chatMessages = [],
+  voiceActive = false,
+  micMuted = false,
+  onSendChat,
+  onToggleMic,
+  onToggleVoiceCall,
 }: HudProps) {
   const railRoom = useRoomForRail();
   /** Key hints are printed only where there are keys to press. */
@@ -330,6 +359,16 @@ export function Hud({
 
           <FieldTally snapshot={snapshot} getElapsed={getElapsed} />
           <TurnBanner snapshot={snapshot} isMyTurn={isMyTurn} />
+          <RoomChat
+            snapshot={snapshot}
+            onlineStatus={onlineStatus}
+            chatMessages={chatMessages}
+            voiceActive={voiceActive}
+            micMuted={micMuted}
+            onSendChat={onSendChat}
+            onToggleMic={onToggleMic}
+            onToggleVoiceCall={onToggleVoiceCall}
+          />
         </div>
 
         <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-1.5">
@@ -904,8 +943,9 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
         <span>Command Status</span>
         <span className="flex items-center gap-1">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
-              }`}
+            className={`h-1.5 w-1.5 rounded-full ${
+              isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
+            }`}
           />
           <span className="text-[0.48rem] tracking-widest text-[#f2e2bd]">
             {isMyTurn ? "ACTIVE" : "WAITING"}
@@ -915,18 +955,273 @@ function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: 
 
       <div className="mt-1 flex items-center gap-2 py-1">
         <span
-          className={`h-2 w-2 shrink-0 rounded-full ${isMyTurn
+          className={`h-2 w-2 shrink-0 rounded-full ${
+            isMyTurn
               ? "bg-[#c084fc] shadow-[0_0_8px_rgba(192,132,252,0.8)]"
               : "bg-amber-400 animate-pulse"
-            }`}
+          }`}
         />
         <p className="mc-display text-[0.6rem] font-bold tracking-[0.16em] text-[#f2e2bd]">
           {isMyTurn
             ? "YOUR TURN — COMMAND YOUR ARMY"
             : snapshot.mode === "online"
-              ? "OPPONENT'S TURN — AWAITING MOVE"
-              : "OPPONENT IS THINKING…"}
+            ? "OPPONENT'S TURN — AWAITING MOVE"
+            : "OPPONENT IS THINKING…"}
         </p>
+      </div>
+    </div>
+  );
+}
+
+const QUICK_EMOTES = [
+  "Good Luck! 🗡️",
+  "Nice Move! 👑",
+  "Well Played! 🛡️",
+  "GG! 🏆",
+  "Oops! 😅",
+];
+
+/**
+ * Premium Standalone Online Communications widget with Glassmorphism,
+ * Quick Reaction Pills, Voice Chat Equalizer, and Room Text Chat.
+ */
+function RoomChat({
+  snapshot,
+  onlineStatus,
+  chatMessages = [],
+  voiceActive = false,
+  micMuted = false,
+  onSendChat,
+  onToggleMic,
+  onToggleVoiceCall,
+}: {
+  snapshot: GameSnapshot;
+  onlineStatus?: OnlineHudInfo;
+  chatMessages?: ChatMessage[];
+  voiceActive?: boolean;
+  micMuted?: boolean;
+  onSendChat?: (text: string) => void;
+  onToggleMic?: () => void;
+  onToggleVoiceCall?: () => void;
+}) {
+  const [chatOpen, setChatOpen] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [lastSeenCount, setLastSeenCount] = useState(0);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  const unreadCount = chatOpen ? 0 : Math.max(0, chatMessages.length - lastSeenCount);
+
+  const handleOpenChat = () => {
+    setChatOpen((open) => {
+      const next = !open;
+      if (next) setLastSeenCount(chatMessages.length);
+      return next;
+    });
+  };
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputText.trim() && onSendChat) {
+      onSendChat(inputText.trim());
+      setInputText("");
+    }
+  };
+
+  const handleQuickEmote = (text: string) => {
+    if (onSendChat) {
+      onSendChat(text);
+    }
+  };
+
+  useEffect(() => {
+    if (chatOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, chatOpen]);
+
+  const latestOpponentMsg = [...chatMessages].reverse().find((m) => !m.isSelf);
+
+  if (snapshot.mode !== "online" || snapshot.status !== "playing") return null;
+
+  return (
+    <div className="flex flex-col items-start gap-1.5 pointer-events-auto">
+      {/* Floating incoming chat alert bubble if chat drawer is closed */}
+      {!chatOpen && latestOpponentMsg && (
+        <div className="mc-fade bg-[#1e0a38]/90 backdrop-blur-md px-3 py-2 text-xs rounded-xl border border-[#c084fc]/60 text-[#f2e2bd] flex items-center gap-2 max-w-[14rem] shadow-[0_0_20px_rgba(192,132,252,0.4)]">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#c084fc]/30 text-[#e9d5ff]">
+            <Crown size={12} />
+          </div>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-[0.6rem] font-bold text-[#c084fc] tracking-wider truncate">
+              {latestOpponentMsg.sender}
+            </span>
+            <span className="truncate text-[0.72rem] text-[#f2e2bd] font-medium leading-tight">
+              {latestOpponentMsg.text}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Expandable Glassmorphism Chat Drawer */}
+      {chatOpen && (
+        <div className="flex h-64 w-80 flex-col rounded-2xl border border-[#c084fc]/40 bg-gradient-to-b from-[#1e0a38]/95 via-[#120524]/95 to-[#0d031a]/95 p-3 shadow-[0_15px_40px_rgba(192,132,252,0.3)] backdrop-blur-xl transition-all duration-300">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#c084fc]/20 text-[#c084fc]">
+                <MessageSquare size={13} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold tracking-wider text-[#e9d5ff]">COMMAND CHAT</h4>
+                <p className="text-[0.55rem] text-[#a5b9e0]">
+                  Connected with <span className="text-[#c084fc] font-semibold">{onlineStatus?.opponentName || "Opponent"}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+              onClick={() => setChatOpen(false)}
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Messages Feed */}
+          <div className="mc-scroll my-2 flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
+            {chatMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <Sparkles size={20} className="text-[#c084fc]/50 mb-1 animate-pulse" />
+                <p className="text-[0.7rem] text-[#a5b9e0]">No messages yet in this room.</p>
+                <p className="text-[0.6rem] text-[#7d6f57]">Send a message or a quick battle phrase below!</p>
+              </div>
+            ) : (
+              chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${msg.isSelf ? "items-end" : "items-start"}`}
+                >
+                  <div className="flex items-center gap-1 mb-0.5 px-1">
+                    {!msg.isSelf && <Crown size={9} className="text-amber-400" />}
+                    <span className="text-[0.55rem] font-semibold text-[#a5b9e0]">
+                      {msg.sender}
+                    </span>
+                    <span className="text-[0.5rem] text-white/40">· {msg.time}</span>
+                    {msg.isSelf && <Shield size={9} className="text-[#c084fc]" />}
+                  </div>
+                  <div
+                    className={`px-3 py-1.5 max-w-[85%] text-[0.75rem] leading-snug break-words shadow-sm ${
+                      msg.isSelf
+                        ? "bg-gradient-to-r from-[#7e22ce]/60 to-[#a855f7]/60 text-white border border-[#c084fc]/50 rounded-2xl rounded-tr-xs shadow-[0_0_12px_rgba(192,132,252,0.2)]"
+                        : "bg-white/10 text-[#f2e2bd] border border-white/15 rounded-2xl rounded-tl-xs backdrop-blur-md"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Quick Emote Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1.5 mc-scroll no-scrollbar">
+            {QUICK_EMOTES.map((emote) => (
+              <button
+                key={emote}
+                type="button"
+                className="shrink-0 rounded-full border border-[#c084fc]/30 bg-[#c084fc]/10 px-2 py-0.5 text-[0.58rem] font-medium text-[#e9d5ff] hover:bg-[#c084fc]/30 hover:border-[#c084fc]/70 transition-all active:scale-95"
+                onClick={() => handleQuickEmote(emote)}
+              >
+                {emote}
+              </button>
+            ))}
+          </div>
+
+          {/* Send Input Form */}
+          <form onSubmit={handleSend} className="flex gap-1.5 pt-1 border-t border-white/10">
+            <input
+              type="text"
+              className="flex-1 rounded-xl border border-white/15 bg-black/40 px-3 py-1.5 text-xs text-white placeholder-white/40 outline-none focus:border-[#c084fc] focus:ring-1 focus:ring-[#c084fc] transition-all"
+              placeholder="Command message..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="flex items-center justify-center rounded-xl bg-gradient-to-r from-[#9333ea] to-[#c084fc] px-3.5 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(192,132,252,0.4)] hover:brightness-110 active:scale-95 transition-all"
+            >
+              <Send size={12} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Modern Main Communications Control Bar */}
+      <div className="flex items-center gap-2 rounded-xl border border-[#c084fc]/30 bg-gradient-to-r from-[#1e0a38]/90 via-[#140628]/90 to-[#0e041d]/90 p-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md">
+        {/* Voice Chat Button */}
+        <button
+          type="button"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${
+            voiceActive
+              ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
+          }`}
+          onClick={onToggleVoiceCall}
+          title={voiceActive ? "Disconnect Voice Chat" : "Start WebRTC Voice Call"}
+        >
+          {voiceActive ? (
+            <>
+              <PhoneOff size={11} className="text-white animate-pulse" />
+              <span>VOICE LIVE</span>
+              {/* Equalizer animation */}
+              <span className="flex items-center gap-0.5 ml-0.5">
+                <span className="h-2 w-0.5 bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="h-3 w-0.5 bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="h-1.5 w-0.5 bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
+              </span>
+            </>
+          ) : (
+            <>
+              <Phone size={11} className="text-[#c084fc]" />
+              <span>VOICE CALL</span>
+            </>
+          )}
+        </button>
+
+        {/* Microphone Toggle (visible when voice is active) */}
+        {voiceActive && (
+          <button
+            type="button"
+            className={`flex items-center justify-center rounded-lg px-2 py-1 text-[0.65rem] font-bold transition-all active:scale-95 ${
+              micMuted
+                ? "bg-rose-500/30 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+                : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+            }`}
+            onClick={onToggleMic}
+            title={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+          >
+            {micMuted ? <MicOff size={12} /> : <Mic size={12} />}
+          </button>
+        )}
+
+        <div className="h-4 w-[1px] bg-white/10" />
+
+        {/* Chat Drawer Toggle Button */}
+        <button
+          type="button"
+          className="relative flex items-center gap-1.5 rounded-lg bg-[#c084fc]/15 border border-[#c084fc]/40 px-2.5 py-1 text-[0.65rem] font-bold tracking-wide text-[#e9d5ff] hover:bg-[#c084fc]/30 transition-all active:scale-95"
+          onClick={handleOpenChat}
+          title="Open Command Chat"
+        >
+          <MessageSquare size={11} className="text-[#c084fc]" />
+          <span>CHAT</span>
+          {unreadCount > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#c084fc] text-[0.55rem] font-bold text-white shadow-[0_0_8px_rgba(192,132,252,0.8)] animate-bounce">
+              {unreadCount}
+            </span>
+          )}
+        </button>
       </div>
     </div>
   );

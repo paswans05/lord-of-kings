@@ -260,6 +260,9 @@ export function GameShell() {
     pingMs: 0,
     roomCode: "",
   });
+  const [chatMessages, setChatMessages] = useState<import("./Hud").ChatMessage[]>([]);
+  const [voiceActive, setVoiceActive] = useState<boolean>(false);
+  const [micMuted, setMicMuted] = useState<boolean>(false);
   /** Showcase recording: strips every panel so the capture is board-only. */
   const [cinema, setCinema] = useState(false);
   /** How the camera behaves during a showcase duel: held, orbiting or following. */
@@ -512,6 +515,18 @@ export function GameShell() {
               setTimeout(() => setNotice(null), 3000);
             }
           },
+          onChatMessage: (msg) => {
+            const timeStr = new Date(msg.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            setChatMessages((prev) => [
+              ...prev,
+              { id: `${msg.t}-${Math.random()}`, sender: msg.sender, text: msg.text, time: timeStr, isSelf: false },
+            ]);
+            audio.blip("press");
+          },
+          onVoiceStateChange: (active, muted) => {
+            setVoiceActive(active);
+            setMicMuted(muted);
+          },
           onDisconnect: () => {
             setNotice("Friend Disconnected");
             setOnlineInfo((prev) => ({ ...prev, isConnected: false }));
@@ -612,6 +627,42 @@ export function GameShell() {
       multiplayerRef.current.sendResign(snapshot.turn);
     }
   }, [controller, snapshot.turn]);
+
+  const handleSendChat = useCallback(
+    (text: string) => {
+      if (!text.trim() || !multiplayerRef.current) return;
+      const myName = onlineInfo.myCommanderName || "Commander";
+      multiplayerRef.current.sendChat(text.trim(), myName);
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setChatMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-${Math.random()}`, sender: myName, text: text.trim(), time: timeStr, isSelf: true },
+      ]);
+    },
+    [onlineInfo.myCommanderName],
+  );
+
+  const handleToggleMic = useCallback(() => {
+    if (multiplayerRef.current) {
+      const muted = multiplayerRef.current.toggleMic();
+      setMicMuted(muted);
+      audio.blip("press");
+    }
+  }, []);
+
+  const handleToggleVoiceCall = useCallback(async () => {
+    if (!multiplayerRef.current) return;
+    audio.blip("press");
+    if (voiceActive) {
+      multiplayerRef.current.stopVoiceChat();
+    } else {
+      const ok = await multiplayerRef.current.startVoiceChat();
+      if (ok) {
+        setNotice("🎙️ VOICE CHAT LIVE");
+        setTimeout(() => setNotice(null), 3000);
+      }
+    }
+  }, [voiceActive]);
 
   const handleRematch = useCallback(() => {
     const current = controller.getSnapshot();
@@ -803,6 +854,12 @@ export function GameShell() {
             onShowcaseCamera={handleShowcaseCamera}
             onToggleCinema={() => setCinema(true)}
             getElapsed={getElapsed}
+            chatMessages={chatMessages}
+            voiceActive={voiceActive}
+            micMuted={micMuted}
+            onSendChat={handleSendChat}
+            onToggleMic={handleToggleMic}
+            onToggleVoiceCall={handleToggleVoiceCall}
           />
         ) : null}
 

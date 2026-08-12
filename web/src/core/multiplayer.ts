@@ -1,4 +1,4 @@
-import { Peer, type DataConnection } from "peerjs";
+import { Peer, type DataConnection, type MediaConnection } from "peerjs";
 import type { Faction, PieceKind, SquareId } from "./types";
 import type { MusterChoice } from "../ui/Muster";
 
@@ -26,6 +26,13 @@ export interface NetworkUndoPayload {
   count?: number;
 }
 
+export interface NetworkChatPayload {
+  type: "CHAT";
+  text: string;
+  sender: string;
+  t: number;
+}
+
 export interface NetworkPingPayload {
   type: "PING";
   t: number;
@@ -45,6 +52,7 @@ export type NetworkMessage =
   | NetworkHandshakePayload
   | NetworkResignPayload
   | NetworkUndoPayload
+  | NetworkChatPayload
   | NetworkPingPayload
   | NetworkPongPayload
   | NetworkRoomFullPayload;
@@ -57,6 +65,8 @@ export interface MultiplayerEvents {
   onHandshake: (color: Faction, muster: MusterChoice, playerName?: string) => void;
   onResign: (color: Faction) => void;
   onUndo?: (count?: number) => void;
+  onChatMessage?: (msg: { text: string; sender: string; t: number }) => void;
+  onVoiceStateChange?: (active: boolean, micMuted: boolean) => void;
   onPing: (pingMs: number) => void;
   onError: (error: string) => void;
 }
@@ -303,6 +313,9 @@ export class MultiplayerService {
       case "UNDO":
         this.events.onUndo?.(msg.count);
         break;
+      case "CHAT":
+        this.events.onChatMessage?.({ text: msg.text, sender: msg.sender, t: msg.t });
+        break;
       case "PING":
         this.send({ type: "PONG", t: msg.t });
         break;
@@ -347,6 +360,11 @@ export class MultiplayerService {
     this.send(payload);
   }
 
+  public sendChat(text: string, senderName: string): void {
+    const payload: NetworkChatPayload = { type: "CHAT", text, sender: senderName, t: Date.now() };
+    this.send(payload);
+  }
+
   private send(msg: NetworkMessage): void {
     if (this.connection && this.connection.open) {
       this.connection.send(msg);
@@ -357,6 +375,7 @@ export class MultiplayerService {
   }
 
   public disconnect(): void {
+    this.stopVoiceChat();
     this.isConnected = false;
     this.stopPingInterval();
     if (this.retryTimer) {
@@ -375,5 +394,87 @@ export class MultiplayerService {
       this.broadcastChannel.close();
       this.broadcastChannel = null;
     }
+  }
+
+  // ---------------------------------------------------------------- Voice Chat
+  private mediaCall: MediaConnection | null = null;
+  private localAudioStream: MediaStream | null = null;
+  private remoteAudioElement: HTMLAudioElement | null = null;
+  public isVoiceActive = false;
+  public isMicMuted = false;
+
+  public async startVoiceChat(): Promise<boolean> {
+    if (this.isVoiceActive) return true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      this.localAudioStream = stream;
+      this.isVoiceActive = true;
+      this.isMicMuted = false;
+
+      if (this.peer) {
+        this.peer.on("call", (call) => {
+          call.answer(stream);
+          this.bindMediaCall(call);
+        });
+
+        if (this.connection && this.connection.peer) {
+          const call = this.peer.call(this.connection.peer, stream);
+          this.bindMediaCall(call);
+        }
+      }
+
+      this.events.onVoiceStateChange?.(true, false);
+      return true;
+    } catch (err) {
+      console.warn("[Multiplayer] Mic access failed:", err);
+      this.events.onError?.("Microphone access denied or unavailable.");
+      return false;
+    }
+  }
+
+  private bindMediaCall(call: MediaConnection): void {
+    this.mediaCall = call;
+    call.on("stream", (remoteStream) => {
+      if (!this.remoteAudioElement) {
+        this.remoteAudioElement = new Audio();
+        this.remoteAudioElement.autoplay = true;
+      }
+      this.remoteAudioElement.srcObject = remoteStream;
+      void this.remoteAudioElement.play().catch(() => {});
+    });
+    call.on("close", () => {
+      this.stopVoiceChat();
+    });
+  }
+
+  public toggleMic(): boolean {
+    if (!this.localAudioStream) return false;
+    const tracks = this.localAudioStream.getAudioTracks();
+    this.isMicMuted = !this.isMicMuted;
+    for (const track of tracks) {
+      track.enabled = !this.isMicMuted;
+    }
+    this.events.onVoiceStateChange?.(this.isVoiceActive, this.isMicMuted);
+    return this.isMicMuted;
+  }
+
+  public stopVoiceChat(): void {
+    if (this.localAudioStream) {
+      for (const track of this.localAudioStream.getTracks()) {
+        track.stop();
+      }
+      this.localAudioStream = null;
+    }
+    if (this.mediaCall) {
+      this.mediaCall.close();
+      this.mediaCall = null;
+    }
+    if (this.remoteAudioElement) {
+      this.remoteAudioElement.srcObject = null;
+      this.remoteAudioElement = null;
+    }
+    this.isVoiceActive = false;
+    this.isMicMuted = false;
+    this.events.onVoiceStateChange?.(false, false);
   }
 }
