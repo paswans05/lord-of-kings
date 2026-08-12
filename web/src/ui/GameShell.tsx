@@ -499,6 +499,19 @@ export function GameShell() {
               engineRef.current?.setCameraPreset(guestColor === "b" ? "black" : "white");
             }
           },
+          onUndo: (count) => {
+            const steps = count || 1;
+            let undone = false;
+            for (let i = 0; i < steps; i++) {
+              if (controller.undo()) undone = true;
+            }
+            if (undone) {
+              audio.blip("press");
+              engineRef.current?.resync();
+              setNotice("↩ FRIEND TOOK BACK MOVE");
+              setTimeout(() => setNotice(null), 3000);
+            }
+          },
           onDisconnect: () => {
             setNotice("Friend Disconnected");
             setOnlineInfo((prev) => ({ ...prev, isConnected: false }));
@@ -582,6 +595,11 @@ export function GameShell() {
     if (controller.undo()) {
       audio.blip("press");
       engineRef.current?.resync();
+      if (multiplayerRef.current?.isConnected) {
+        multiplayerRef.current.sendUndo(1);
+        setNotice("↩ TAKE BACK APPLIED");
+        setTimeout(() => setNotice(null), 3000);
+      }
     } else {
       audio.blip("deny");
     }
@@ -590,7 +608,10 @@ export function GameShell() {
   const handleResign = useCallback(() => {
     audio.blip("deny");
     controller.resign();
-  }, [controller]);
+    if (multiplayerRef.current?.isConnected) {
+      multiplayerRef.current.sendResign(snapshot.turn);
+    }
+  }, [controller, snapshot.turn]);
 
   const handleRematch = useCallback(() => {
     const current = controller.getSnapshot();

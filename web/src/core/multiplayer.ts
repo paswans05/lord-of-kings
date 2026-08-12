@@ -21,6 +21,11 @@ export interface NetworkResignPayload {
   color: Faction;
 }
 
+export interface NetworkUndoPayload {
+  type: "UNDO";
+  count?: number;
+}
+
 export interface NetworkPingPayload {
   type: "PING";
   t: number;
@@ -39,6 +44,7 @@ export type NetworkMessage =
   | NetworkMovePayload
   | NetworkHandshakePayload
   | NetworkResignPayload
+  | NetworkUndoPayload
   | NetworkPingPayload
   | NetworkPongPayload
   | NetworkRoomFullPayload;
@@ -50,6 +56,7 @@ export interface MultiplayerEvents {
   onMove: (from: SquareId, to: SquareId, promotion?: PieceKind) => void;
   onHandshake: (color: Faction, muster: MusterChoice, playerName?: string) => void;
   onResign: (color: Faction) => void;
+  onUndo?: (count?: number) => void;
   onPing: (pingMs: number) => void;
   onError: (error: string) => void;
 }
@@ -293,6 +300,9 @@ export class MultiplayerService {
       case "RESIGN":
         this.events.onResign?.(msg.color);
         break;
+      case "UNDO":
+        this.events.onUndo?.(msg.count);
+        break;
       case "PING":
         this.send({ type: "PONG", t: msg.t });
         break;
@@ -329,6 +339,11 @@ export class MultiplayerService {
 
   public sendResign(color: Faction): void {
     const payload: NetworkResignPayload = { type: "RESIGN", color };
+    this.send(payload);
+  }
+
+  public sendUndo(count = 1): void {
+    const payload: NetworkUndoPayload = { type: "UNDO", count };
     this.send(payload);
   }
 
