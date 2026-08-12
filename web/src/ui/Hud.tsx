@@ -281,25 +281,7 @@ export function Hud({
 
   return (
     <>
-      {snapshot.status === "playing" && (
-        <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-40">
-          {isMyTurn ? (
-            <div className="mc-unfurl rounded-full border border-[#c084fc] bg-[#1e0a38]/90 px-5 py-1.5 shadow-[0_0_20px_rgba(192,132,252,0.55)] backdrop-blur-md flex items-center gap-2">
-              <span className="mc-pulse h-2 w-2 rounded-full bg-[#c084fc]" />
-              <span className="mc-display text-[0.68rem] font-bold tracking-[0.3em] text-[#e9d5ff]">
-                YOUR TURN — COMMAND YOUR ARMY
-              </span>
-            </div>
-          ) : (
-            <div className="rounded-full border border-white/10 bg-black/70 px-4 py-1.5 backdrop-blur-md flex items-center gap-2">
-              <span className="mc-pulse h-2 w-2 rounded-full bg-amber-400" />
-              <span className="mc-display text-[0.65rem] tracking-[0.25em] text-[#a5b9e0]">
-                {snapshot.mode === "online" ? "OPPONENT'S TURN — AWAITING MOVE" : "OPPONENT IS THINKING…"}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* Top bar */}
       {/* Padding (including the notch/home-bar insets) lives in `.mc-hud-top`. */}
@@ -347,6 +329,7 @@ export function Hud({
           </div>
 
           <FieldTally snapshot={snapshot} getElapsed={getElapsed} />
+          <TurnBanner snapshot={snapshot} isMyTurn={isMyTurn} />
         </div>
 
         <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-1.5">
@@ -686,9 +669,8 @@ export function Hud({
               </Tooltip>
               <Tooltip
                 label="New duel"
-                hint={`Reset the board — ${DIFFICULTY_SHORT[demo.white] ?? demo.white} vs ${
-                  DIFFICULTY_SHORT[demo.black] ?? demo.black
-                }.`}
+                hint={`Reset the board — ${DIFFICULTY_SHORT[demo.white] ?? demo.white} vs ${DIFFICULTY_SHORT[demo.black] ?? demo.black
+                  }.`}
                 side="top"
               >
                 <button
@@ -715,9 +697,8 @@ export function Hud({
           ) : (
             <Tooltip
               label="AI vs AI controls"
-              hint={`${DIFFICULTY_SHORT[demo.white] ?? demo.white} vs ${
-                DIFFICULTY_SHORT[demo.black] ?? demo.black
-              }${snapshot.paused ? " — paused" : ""}. Speed, camera and loop.`}
+              hint={`${DIFFICULTY_SHORT[demo.white] ?? demo.white} vs ${DIFFICULTY_SHORT[demo.black] ?? demo.black
+                }${snapshot.paused ? " — paused" : ""}. Speed, camera and loop.`}
               side="top"
             >
               <button
@@ -775,9 +756,8 @@ function FieldTally({ snapshot, getElapsed }: { snapshot: GameSnapshot; getElaps
   return (
     <div
       className="mc-tally mc-slate pointer-events-none"
-      aria-label={`Field tally. Ivory: ${losses.w} lost, ${formatElapsed(elapsed.whiteMs)} on the field. Obsidian: ${
-        losses.b
-      } lost, ${formatElapsed(elapsed.blackMs)} on the field.`}
+      aria-label={`Field tally. Ivory: ${losses.w} lost, ${formatElapsed(elapsed.whiteMs)} on the field. Obsidian: ${losses.b
+        } lost, ${formatElapsed(elapsed.blackMs)} on the field.`}
     >
       <div className="mc-tally-head">
         <span>Field tally</span>
@@ -909,5 +889,47 @@ function IconButton({
         {children}
       </button>
     </Tooltip>
+  );
+}
+
+/**
+ * Command status banner matching the exact slate card UI styling of FieldTally.
+ */
+function TurnBanner({ snapshot, isMyTurn }: { snapshot: GameSnapshot; isMyTurn: boolean }) {
+  if (snapshot.status !== "playing") return null;
+
+  return (
+    <div className="mc-tally mc-slate pointer-events-auto">
+      <div className="mc-tally-head">
+        <span>Command Status</span>
+        <span className="flex items-center gap-1">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              isMyTurn ? "bg-[#c084fc] mc-pulse" : "bg-amber-400 animate-pulse"
+            }`}
+          />
+          <span className="text-[0.48rem] tracking-widest text-[#f2e2bd]">
+            {isMyTurn ? "ACTIVE" : "WAITING"}
+          </span>
+        </span>
+      </div>
+
+      <div className="mt-1 flex items-center gap-2 py-1">
+        <span
+          className={`h-2 w-2 shrink-0 rounded-full ${
+            isMyTurn
+              ? "bg-[#c084fc] shadow-[0_0_8px_rgba(192,132,252,0.8)]"
+              : "bg-amber-400 animate-pulse"
+          }`}
+        />
+        <p className="mc-display text-[0.6rem] font-bold tracking-[0.16em] text-[#f2e2bd]">
+          {isMyTurn
+            ? "YOUR TURN — COMMAND YOUR ARMY"
+            : snapshot.mode === "online"
+            ? "OPPONENT'S TURN — AWAITING MOVE"
+            : "OPPONENT IS THINKING…"}
+        </p>
+      </div>
+    </div>
   );
 }
