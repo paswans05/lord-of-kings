@@ -49,7 +49,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
     if (email.trim() && typeof window !== "undefined") {
       try {
         window.localStorage.setItem("kg.payment_email", email.trim());
-      } catch {}
+      } catch { }
     }
 
     const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_DravidaChess10";
@@ -58,7 +58,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
       key: razorpayKey,
       amount: 1000, // 10 INR = 1000 Paise
       currency: "INR",
-      name: "Dravida 3D Chess",
+      name: "King's Fall 3D Chess",
       description: "Voice Chat & Room Text Chat Pass (Current Match)",
       image: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
       handler: function (response: any) {
@@ -102,7 +102,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
     if (email.trim() && typeof window !== "undefined") {
       try {
         window.localStorage.setItem("kg.payment_email", email.trim());
-      } catch {}
+      } catch { }
     }
     setTimeout(() => {
       unlockPremiumComms();
@@ -175,7 +175,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="commander@gmail.com"
+                placeholder="example@gmail.com"
                 className="w-full rounded-xl border border-white/15 bg-black/40 pl-9 pr-3 py-2 text-xs font-semibold text-white placeholder-white/40 outline-none focus:border-[#c084fc] focus:ring-1 focus:ring-[#c084fc] transition-all"
               />
             </div>
@@ -192,7 +192,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
               {loading ? "Processing..." : "Pay ₹10 with Razorpay"}
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={simulatePayment}
               disabled={loading}
@@ -200,7 +200,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
             >
               <Check size={13} className="text-emerald-400" />
               <span>Instant Test Unlock (Demo Mode)</span>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
