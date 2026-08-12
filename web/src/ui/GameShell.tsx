@@ -22,6 +22,7 @@ import { MainMenu, type MatchConfig } from "./MainMenu";
 import type { MusterChoice } from "./Muster";
 import { SettingsPanel, type GameSettings } from "./SettingsPanel";
 import { useGameSnapshot } from "./useGameSnapshot";
+import { RazorpayModal, isPremiumCommsUnlocked } from "./RazorpayModal";
 import "./Dravida.css";
 
 type Phase = "loading" | "menu" | "playing";
@@ -263,6 +264,8 @@ export function GameShell() {
   const [chatMessages, setChatMessages] = useState<import("./Hud").ChatMessage[]>([]);
   const [voiceActive, setVoiceActive] = useState<boolean>(false);
   const [micMuted, setMicMuted] = useState<boolean>(false);
+  const [isPremium, setIsPremium] = useState<boolean>(() => isPremiumCommsUnlocked());
+  const [showRazorpay, setShowRazorpay] = useState<boolean>(false);
   /** Showcase recording: strips every panel so the capture is board-only. */
   const [cinema, setCinema] = useState(false);
   /** How the camera behaves during a showcase duel: held, orbiting or following. */
@@ -630,6 +633,10 @@ export function GameShell() {
 
   const handleSendChat = useCallback(
     (text: string) => {
+      if (!isPremiumCommsUnlocked()) {
+        setShowRazorpay(true);
+        return;
+      }
       if (!text.trim() || !multiplayerRef.current) return;
       const myName = onlineInfo.myCommanderName || "Commander";
       multiplayerRef.current.sendChat(text.trim(), myName);
@@ -643,6 +650,10 @@ export function GameShell() {
   );
 
   const handleToggleMic = useCallback(() => {
+    if (!isPremiumCommsUnlocked()) {
+      setShowRazorpay(true);
+      return;
+    }
     if (multiplayerRef.current) {
       const muted = multiplayerRef.current.toggleMic();
       setMicMuted(muted);
@@ -651,6 +662,10 @@ export function GameShell() {
   }, []);
 
   const handleToggleVoiceCall = useCallback(async () => {
+    if (!isPremiumCommsUnlocked()) {
+      setShowRazorpay(true);
+      return;
+    }
     if (!multiplayerRef.current) return;
     audio.blip("press");
     if (voiceActive) {
@@ -857,6 +872,8 @@ export function GameShell() {
             chatMessages={chatMessages}
             voiceActive={voiceActive}
             micMuted={micMuted}
+            isPremium={isPremium}
+            onOpenRazorpayModal={() => setShowRazorpay(true)}
             onSendChat={handleSendChat}
             onToggleMic={handleToggleMic}
             onToggleVoiceCall={handleToggleVoiceCall}
@@ -949,6 +966,17 @@ export function GameShell() {
             {notice}
           </div>
         ) : null}
+
+        <RazorpayModal
+          isOpen={showRazorpay}
+          onClose={() => setShowRazorpay(false)}
+          onSuccess={() => {
+            setIsPremium(true);
+            setNotice("👑 PREMIUM BATTLE PASS UNLOCKED! (₹10 PAID)");
+            setTimeout(() => setNotice(null), 4000);
+          }}
+          playerName={onlineInfo.myCommanderName}
+        />
 
         {contextLost ? (
           <div className="pointer-events-auto absolute inset-0 z-40 flex items-center justify-center bg-black/80 px-6 text-center">

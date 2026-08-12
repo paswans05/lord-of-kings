@@ -72,6 +72,8 @@ interface HudProps {
   chatMessages?: ChatMessage[];
   voiceActive?: boolean;
   micMuted?: boolean;
+  isPremium?: boolean;
+  onOpenRazorpayModal?: () => void;
   onSendChat?: (text: string) => void;
   onToggleMic?: () => void;
   onToggleVoiceCall?: () => void;
@@ -196,6 +198,8 @@ export function Hud({
   chatMessages = [],
   voiceActive = false,
   micMuted = false,
+  isPremium = false,
+  onOpenRazorpayModal,
   onSendChat,
   onToggleMic,
   onToggleVoiceCall,
@@ -368,6 +372,8 @@ export function Hud({
             chatMessages={chatMessages}
             voiceActive={voiceActive}
             micMuted={micMuted}
+            isPremium={isPremium}
+            onOpenRazorpayModal={onOpenRazorpayModal}
             onSendChat={onSendChat}
             onToggleMic={onToggleMic}
             onToggleVoiceCall={onToggleVoiceCall}
@@ -1025,6 +1031,8 @@ function RoomChat({
   chatMessages = [],
   voiceActive = false,
   micMuted = false,
+  isPremium = false,
+  onOpenRazorpayModal,
   onSendChat,
   onToggleMic,
   onToggleVoiceCall,
@@ -1034,6 +1042,8 @@ function RoomChat({
   chatMessages?: ChatMessage[];
   voiceActive?: boolean;
   micMuted?: boolean;
+  isPremium?: boolean;
+  onOpenRazorpayModal?: () => void;
   onSendChat?: (text: string) => void;
   onToggleMic?: () => void;
   onToggleVoiceCall?: () => void;
@@ -1046,11 +1056,23 @@ function RoomChat({
   const unreadCount = chatOpen ? 0 : Math.max(0, chatMessages.length - lastSeenCount);
 
   const handleOpenChat = () => {
+    if (!isPremium) {
+      onOpenRazorpayModal?.();
+      return;
+    }
     setChatOpen((open) => {
       const next = !open;
       if (next) setLastSeenCount(chatMessages.length);
       return next;
     });
+  };
+
+  const handleVoiceCallClick = () => {
+    if (!isPremium) {
+      onOpenRazorpayModal?.();
+      return;
+    }
+    onToggleVoiceCall?.();
   };
 
   const handleSend = (e: React.FormEvent) => {
@@ -1195,12 +1217,13 @@ function RoomChat({
         {/* Voice Chat Button */}
         <button
           type="button"
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${voiceActive
-            ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-            : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
-            }`}
-          onClick={onToggleVoiceCall}
-          title={voiceActive ? "Disconnect Voice Chat" : "Start WebRTC Voice Call"}
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-bold tracking-wide transition-all active:scale-95 ${
+            voiceActive
+              ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              : "bg-white/5 text-[#f2e2bd] border border-white/10 hover:bg-white/15"
+          }`}
+          onClick={handleVoiceCallClick}
+          title={!isPremium ? "Unlock Voice Chat (₹10 Razorpay)" : voiceActive ? "Disconnect Voice Chat" : "Start WebRTC Voice Call"}
         >
           {voiceActive ? (
             <>
@@ -1243,7 +1266,7 @@ function RoomChat({
           type="button"
           className="relative flex items-center gap-1.5 rounded-lg bg-[#c084fc]/15 border border-[#c084fc]/40 px-2.5 py-1 text-[0.65rem] font-bold tracking-wide text-[#e9d5ff] hover:bg-[#c084fc]/30 transition-all active:scale-95"
           onClick={handleOpenChat}
-          title="Open Command Chat"
+          title={!isPremium ? "Unlock Command Chat (₹10 Razorpay)" : "Open Command Chat"}
         >
           <MessageSquare size={11} className="text-[#c084fc]" />
           <span>CHAT</span>
@@ -1253,6 +1276,17 @@ function RoomChat({
             </span>
           )}
         </button>
+
+        {!isPremium && (
+          <button
+            type="button"
+            onClick={onOpenRazorpayModal}
+            className="mc-pulse flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-500 to-purple-600 px-2.5 py-1 text-[0.62rem] font-extrabold text-white shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:brightness-110 active:scale-95 cursor-pointer"
+          >
+            <Sparkles size={11} className="animate-spin" />
+            <span>UNLOCK (10 ₹)</span>
+          </button>
+        )}
       </div>
     </div>
   );
