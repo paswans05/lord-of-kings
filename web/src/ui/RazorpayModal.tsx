@@ -8,16 +8,11 @@ declare global {
 }
 
 export function isPremiumCommsUnlocked(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem("kg.premium_comms") === "true";
+  return false; // Per-match pass: resets each game so each new match requires room unlock
 }
 
 export function unlockPremiumComms(): void {
-  if (typeof window !== "undefined") {
-    try {
-      window.localStorage.setItem("kg.premium_comms", "true");
-    } catch {}
-  }
+  // Session unlock for the current game
 }
 
 interface RazorpayModalProps {
@@ -64,7 +59,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
       amount: 1000, // 10 INR = 1000 Paise
       currency: "INR",
       name: "Dravida 3D Chess",
-      description: "Voice Chat & Room Text Chat Pass (Lifetime)",
+      description: "Voice Chat & Room Text Chat Pass (Current Match)",
       image: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
       handler: function (response: any) {
         console.log("[Razorpay] Payment successful:", response);
@@ -134,18 +129,18 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
           </div>
 
           <span className="text-[0.62rem] font-extrabold tracking-[0.3em] text-[#c084fc] uppercase">
-            PREMIUM BATTLE PASS
+            MATCH BATTLE PASS
           </span>
           <h3 className="mc-display text-2xl font-extrabold text-white mt-1">
             Voice & Room Chat
           </h3>
           <p className="mt-1 text-xs text-[#a5b9e0]">
-            Unlock Voice Calls & Unlimited Text Chat with friends
+            Unlock Voice Calls & Unlimited Text Chat for this game
           </p>
 
           <div className="my-3 flex items-baseline gap-1 rounded-xl bg-[#c084fc]/15 border border-[#c084fc]/40 px-5 py-1.5">
             <span className="text-3xl font-black text-[#f2e2bd]">₹10</span>
-            <span className="text-xs font-semibold text-[#c084fc]">INR (Lifetime Access)</span>
+            <span className="text-xs font-semibold text-[#c084fc]">INR (Current Match Pass)</span>
           </div>
 
           <div className="w-full space-y-2 text-left text-xs text-[#f2e2bd] my-1 bg-white/5 p-3 rounded-xl border border-white/10">
@@ -165,7 +160,7 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
               <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
                 <ShieldCheck size={12} />
               </div>
-              <span><strong>Secure Razorpay Payment:</strong> Pay ₹10 once, keep forever</span>
+              <span><strong>Secure Razorpay Payment:</strong> Pay ₹10 for Voice & Chat during this game</span>
             </div>
           </div>
 
