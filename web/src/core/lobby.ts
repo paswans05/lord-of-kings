@@ -20,6 +20,7 @@ export interface LobbyStats {
 const STORAGE_KEY_ROOMS = "lok3d_lobby_rooms_v1";
 const STORAGE_KEY_USERS = "lok3d_lobby_users_v1";
 const LOBBY_CHANNEL_NAME = "lok3d_global_lobby_channel_v1";
+const NTFY_GLOBAL_ROOMS_URL = "https://ntfy.sh/lok3d_global_rooms_v3";
 
 export class LobbyService {
   private static instance: LobbyService | null = null;
@@ -31,6 +32,7 @@ export class LobbyService {
   private channel: BroadcastChannel | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private listeners: Set<(stats: LobbyStats) => void> = new Set();
+  private sse: EventSource | null = null;
 
   private constructor() {
     this.clientId = `usr_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
@@ -49,6 +51,7 @@ export class LobbyService {
           this.notifyListeners();
         }
       });
+      this.setupGlobalNetworkSSE();
       this.startHeartbeat();
     }
   }
@@ -71,7 +74,7 @@ export class LobbyService {
     this.currentRoomIsPrivate = isPrivate;
     this.currentRoomPlayerCount = 1;
 
-    this.updateRoomInStorage({
+    const roomData: PublicRoomInfo = {
       roomCode: this.currentRoomCode,
       hostName: this.playerName,
       hostClientId: this.clientId,
@@ -79,9 +82,21 @@ export class LobbyService {
       playerCount: 1,
       createdAt: Date.now(),
       lastHeartbeat: Date.now(),
-    });
+    };
 
+    this.updateRoomInStorage(roomData);
     this.sendHeartbeat();
+
+    // Broadcast room creation across the global network for all devices
+    this.broadcastGlobalNetworkMessage({
+      type: "ROOM_ANNOUNCE",
+      roomCode: this.currentRoomCode,
+      hostName: this.playerName,
+      hostClientId: this.clientId,
+      isPrivate: isPrivate,
+      playerCount: 1,
+      createdAt: Date.now(),
+    });
   }
 
   /** Mark room as joined by guest (2/2 capacity full -> auto remove from public list) */
@@ -98,6 +113,12 @@ export class LobbyService {
       this.saveRoomsToStorage(rooms);
       this.notifyListeners();
     }
+
+    // Broadcast room capacity full to all devices
+    this.broadcastGlobalNetworkMessage({
+      type: "ROOM_JOINED",
+      roomCode: code,
+    });
   }
 
   /** Leave/Close hosted room */
@@ -106,6 +127,13 @@ export class LobbyService {
       const code = this.currentRoomCode;
       this.currentRoomCode = null;
       this.removeRoomFromStorage(code);
+
+      // Broadcast room closure globally
+      this.broadcastGlobalNetworkMessage({
+        type: "ROOM_CLOSED",
+        roomCode: code,
+        hostClientId: this.clientId,
+      });
     }
     this.sendHeartbeat();
   }
@@ -196,6 +224,16 @@ export class LobbyService {
         });
       }
       this.saveRoomsToStorage(rooms);
+
+      // Publish global network heartbeat across all devices
+      this.broadcastGlobalNetworkMessage({
+        type: "ROOM_HEARTBEAT",
+        roomCode: this.currentRoomCode,
+        hostName: this.playerName,
+        hostClientId: this.clientId,
+        isPrivate: this.currentRoomIsPrivate,
+        playerCount: this.currentRoomPlayerCount,
+      });
     }
 
     if (this.channel) {
@@ -203,6 +241,62 @@ export class LobbyService {
     }
 
     this.notifyListeners();
+  }
+
+  private setupGlobalNetworkSSE(): void {
+    if (typeof EventSource === "undefined") return;
+    try {
+      this.sse = new EventSource(`${NTFY_GLOBAL_ROOMS_URL}/sse`);
+      this.sse.onerror = () => {
+        // Silently handle network/CORS disconnects
+      };
+      this.sse.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (!payload.message) return;
+          const msg = JSON.parse(payload.message);
+
+          if (msg.type === "ROOM_ANNOUNCE" || msg.type === "ROOM_HEARTBEAT") {
+            if (msg.hostClientId !== this.clientId && msg.roomCode) {
+              this.updateRoomInStorage({
+                roomCode: msg.roomCode,
+                hostName: msg.hostName || "Commander",
+                hostClientId: msg.hostClientId || "remote_host",
+                isPrivate: Boolean(msg.isPrivate),
+                playerCount: msg.playerCount || 1,
+                createdAt: msg.createdAt || Date.now(),
+                lastHeartbeat: Date.now(),
+              });
+              this.notifyListeners();
+            }
+          } else if (msg.type === "ROOM_CLOSED" && msg.roomCode) {
+            this.removeRoomFromStorage(msg.roomCode);
+            this.notifyListeners();
+          } else if (msg.type === "ROOM_JOINED" && msg.roomCode) {
+            const rooms = this.getRoomsFromStorage();
+            const target = rooms.find((r) => r.roomCode === msg.roomCode);
+            if (target) {
+              target.playerCount = 2;
+              target.lastHeartbeat = Date.now();
+              this.saveRoomsToStorage(rooms);
+              this.notifyListeners();
+            }
+          }
+        } catch {}
+      };
+    } catch {}
+  }
+
+  private broadcastGlobalNetworkMessage(data: Record<string, unknown>): void {
+    try {
+      fetch(NTFY_GLOBAL_ROOMS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).catch(() => {
+        // Catch async fetch errors silently so no unhandled rejections appear in browser console
+      });
+    } catch {}
   }
 
   private notifyListeners(): void {

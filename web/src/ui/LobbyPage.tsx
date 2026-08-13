@@ -82,19 +82,10 @@ export function LobbyPage({
     }
   }, []);
 
-  // Register host room when in public create or paid private create tab so second person sees it live in directory
+  // Leave draft unhosted rooms on setup tab change so rooms are only published when host enters the game room
   useEffect(() => {
-    if (onlineTab === "public_create") {
-      lobbyService.registerHostRoom(hostCode, false);
-    } else if (onlineTab === "private_create" && isPrivatePaid) {
-      lobbyService.registerHostRoom(hostCode, true);
-    } else {
-      lobbyService.leaveRoom();
-    }
-    return () => {
-      lobbyService.leaveRoom();
-    };
-  }, [onlineTab, hostCode, isPrivatePaid]);
+    lobbyService.leaveRoom();
+  }, [onlineTab]);
 
   const copyCodeOnly = (): void => {
     void navigator.clipboard.writeText(hostCode);
