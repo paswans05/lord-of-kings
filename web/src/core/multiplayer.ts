@@ -119,6 +119,51 @@ export function generateRoomCode(): string {
   return code;
 }
 
+export async function verifyRoomPeer(roomCode: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const peerId = `${PEER_PREFIX}${roomCode.trim().toUpperCase()}`;
+    let resolved = false;
+
+    const tempPeer = new Peer(PEER_CONFIG);
+
+    const finish = (isOnline: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      try {
+        tempPeer.destroy();
+      } catch {}
+      resolve(isOnline);
+    };
+
+    const timer = setTimeout(() => finish(false), 3500);
+
+    tempPeer.on("open", () => {
+      try {
+        const conn = tempPeer.connect(peerId, { reliable: false });
+        conn.on("open", () => {
+          clearTimeout(timer);
+          try {
+            conn.close();
+          } catch {}
+          finish(true);
+        });
+        conn.on("error", () => {
+          clearTimeout(timer);
+          finish(false);
+        });
+      } catch {
+        clearTimeout(timer);
+        finish(false);
+      }
+    });
+
+    tempPeer.on("error", () => {
+      clearTimeout(timer);
+      finish(false);
+    });
+  });
+}
+
 export class MultiplayerService {
   private peer: Peer | null = null;
   private connection: DataConnection | null = null;

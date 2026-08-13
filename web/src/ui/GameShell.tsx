@@ -458,6 +458,10 @@ export function GameShell() {
           myCommanderName: config.online?.playerName || "Commander",
         });
 
+        if (hostFlag && config.online?.roomCode) {
+          lobbyService.registerHostRoom(config.online.roomCode, config.online.isPrivate ?? false);
+        }
+
         if (multiplayerRef.current) {
           multiplayerRef.current.disconnect();
         }

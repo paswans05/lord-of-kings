@@ -1,11 +1,9 @@
-/**
- * Global Lobby Service: Tracks online user count & active public/private room directory.
- * Uses BroadcastChannel + localStorage heartbeats to synchronize active rooms & commanders.
- */
+import { verifyRoomPeer } from "./multiplayer";
 
 export interface PublicRoomInfo {
   roomCode: string;
   hostName: string;
+  hostClientId: string;
   isPrivate: boolean;
   playerCount: number; // 1 or 2
   createdAt: number;
@@ -15,6 +13,8 @@ export interface PublicRoomInfo {
 export interface LobbyStats {
   onlineUsersCount: number;
   publicRooms: PublicRoomInfo[];
+  privateRooms: PublicRoomInfo[];
+  allRooms: PublicRoomInfo[];
 }
 
 const STORAGE_KEY_ROOMS = "lok3d_lobby_rooms_v1";
@@ -44,6 +44,11 @@ export class LobbyService {
           }
         };
       }
+      window.addEventListener("storage", (event) => {
+        if (event.key === STORAGE_KEY_ROOMS || event.key === STORAGE_KEY_USERS) {
+          this.notifyListeners();
+        }
+      });
       this.startHeartbeat();
     }
   }
@@ -69,6 +74,7 @@ export class LobbyService {
     this.updateRoomInStorage({
       roomCode: this.currentRoomCode,
       hostName: this.playerName,
+      hostClientId: this.clientId,
       isPrivate: isPrivate,
       playerCount: 1,
       createdAt: Date.now(),
@@ -104,6 +110,16 @@ export class LobbyService {
     this.sendHeartbeat();
   }
 
+  /** Verify live PeerJS host connection before joining */
+  public async verifyRoom(roomCode: string): Promise<boolean> {
+    const isAlive = await verifyRoomPeer(roomCode);
+    if (!isAlive) {
+      this.removeRoomFromStorage(roomCode.toUpperCase());
+      this.notifyListeners();
+    }
+    return isAlive;
+  }
+
   public subscribe(callback: (stats: LobbyStats) => void): () => void {
     this.listeners.add(callback);
     callback(this.getStats());
@@ -114,14 +130,15 @@ export class LobbyService {
 
   public getStats(): LobbyStats {
     const now = Date.now();
-    // Clean stale rooms (>15s since heartbeat or playerCount >= 2 or isPrivate)
-    const allRooms = this.getRoomsFromStorage().filter((r) => now - r.lastHeartbeat < 15000);
-    this.saveRoomsToStorage(allRooms);
+    // Clean stale rooms (>15s since heartbeat or playerCount >= 2)
+    const activeRooms = this.getRoomsFromStorage().filter((r) => now - r.lastHeartbeat < 15000);
+    this.saveRoomsToStorage(activeRooms);
 
-    // Only public rooms with exactly 1 player are joinable from home page
-    const publicJoinableRooms = allRooms.filter(
-      (r) => !r.isPrivate && r.playerCount < 2
+    const openRooms = activeRooms.filter(
+      (r) => r.playerCount < 2 && r.hostClientId !== this.clientId && r.roomCode !== this.currentRoomCode
     );
+    const publicRooms = openRooms.filter((r) => !r.isPrivate);
+    const privateRooms = openRooms.filter((r) => r.isPrivate);
 
     // Clean stale users (>15s since heartbeat)
     const users = this.getUsersFromStorage().filter((u) => now - u.lastSeen < 15000);
@@ -131,7 +148,9 @@ export class LobbyService {
 
     return {
       onlineUsersCount: onlineCount,
-      publicRooms: publicJoinableRooms,
+      publicRooms,
+      privateRooms,
+      allRooms: openRooms,
     };
   }
 
@@ -164,10 +183,12 @@ export class LobbyService {
         rooms[idx].lastHeartbeat = now;
         rooms[idx].playerCount = this.currentRoomPlayerCount;
         rooms[idx].isPrivate = this.currentRoomIsPrivate;
+        rooms[idx].hostClientId = this.clientId;
       } else {
         rooms.push({
           roomCode: this.currentRoomCode,
           hostName: this.playerName,
+          hostClientId: this.clientId,
           isPrivate: this.currentRoomIsPrivate,
           playerCount: this.currentRoomPlayerCount,
           createdAt: now,
