@@ -63,7 +63,7 @@ export function LobbyPage({
     lobbyService.setPlayerName(name);
     try {
       window.localStorage.setItem("kg.playername", name);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -127,7 +127,6 @@ export function LobbyPage({
     const isPrivate = onlineTab === "private_create";
 
     if (isHostMode) {
-      // Publish the public/private room only now when the host makes it public!
       lobbyService.registerHostRoom(selectedCode, isPrivate);
     } else {
       lobbyService.markRoomJoined(selectedCode);
@@ -148,86 +147,85 @@ export function LobbyPage({
   };
 
   return (
-    <div className="mc-menu mc-modal-pad pointer-events-auto absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-3 sm:p-5">
-      {/* Title & Online Header Counters */}
-      <div className="mc-unfurl mc-menu-hero shrink-0 text-center relative mb-2">
-        <p className="mc-display text-[0.65rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.5)]">
+    <div className="mc-menu mc-modal-pad pointer-events-auto absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-2 sm:p-4">
+      {/* Title Header - Compact & Sleek */}
+      <div className="mc-unfurl mc-menu-hero shrink-0 text-center relative mb-1">
+        <p className="mc-display text-[0.62rem] tracking-[0.55em] text-[#c084fc] font-semibold drop-shadow-[0_0_10px_rgba(192,132,252,0.5)]">
           DRAVIDA 3D CHESS
         </p>
-        <h1 className="mc-display mc-title-glow mt-0.5 text-3xl font-extrabold text-white sm:text-5xl">
+        <h1 className="mc-display mc-title-glow mt-0.5 text-2xl font-extrabold text-white sm:text-4xl">
           KING&apos;S FALL LOBBY
         </h1>
 
-        {/* Live Online Users Header Badge */}
-        <div className="mt-1.5 flex items-center justify-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-0.5 text-[0.62rem] font-bold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+        {/* Live Online Badges */}
+        <div className="mt-1 flex items-center justify-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-0.5 text-[0.6rem] font-bold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
             <span>{lobbyStats.onlineUsersCount} COMMANDERS ONLINE</span>
           </span>
           {lobbyStats.publicRooms.length > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/15 border border-purple-500/40 px-3 py-0.5 text-[0.62rem] font-bold text-[#c084fc]">
-              <Globe size={11} />
+            <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/15 border border-purple-500/40 px-2.5 py-0.5 text-[0.6rem] font-bold text-[#c084fc]">
+              <Globe size={10} />
               <span>{lobbyStats.publicRooms.length} PUBLIC LOBBIES</span>
             </span>
           )}
         </div>
       </div>
 
-      {/* Split 2-Column Container: Full Width, Fixed Height Bound */}
-      <div className="mc-rise flex w-full max-w-6xl flex-1 flex-col gap-3 min-h-0 md:flex-row md:items-stretch overflow-hidden">
-        
-        {/* LEFT SIDE: LIVE LOBBY DIRECTORY PANEL */}
-        <div className="mc-slate mc-goldleaf flex w-full flex-col p-4 sm:p-5 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0">
-          <div className="shrink-0 mb-2.5 flex items-center justify-between border-b border-white/10 pb-2">
-            <div className="flex items-center gap-2">
-              <Globe size={16} className="text-[#c084fc]" />
-              <h2 className="mc-display text-xs sm:text-sm font-bold tracking-wider text-white uppercase">
-                Live Lobby Rooms ({lobbyStats.allRooms.length})
+      {/* Split 2-Column Dashboard: Full Widescreen & ZERO-SCROLL Compact Layout */}
+      <div className="mc-rise flex w-full max-w-6xl flex-1 flex-col gap-2.5 min-h-0 md:flex-row md:items-stretch overflow-hidden">
+
+        {/* LEFT PANEL: LIVE LOBBY ROOMS DIRECTORY */}
+        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0">
+          <div className="shrink-0 mb-2 flex items-center justify-between border-b border-white/10 pb-1.5">
+            <div className="flex items-center gap-1.5">
+              <Globe size={14} className="text-[#c084fc]" />
+              <h2 className="mc-display text-xs font-bold tracking-wider text-white uppercase">
+                Live Lobby Directory ({lobbyStats.allRooms.length})
               </h2>
             </div>
-            <span className="text-[0.6rem] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-[0.58rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
               MAX 2 PLAYERS
             </span>
           </div>
 
           {privateNotice && (
-            <div className="shrink-0 mb-2 text-[0.68rem] font-semibold text-amber-300 bg-amber-500/20 border border-amber-500/40 p-2 rounded-lg text-center animate-fade-in">
+            <div className="shrink-0 mb-2 text-[0.65rem] font-semibold text-amber-300 bg-amber-500/20 border border-amber-500/40 p-1.5 rounded-lg text-center animate-fade-in">
               {privateNotice}
             </div>
           )}
 
-          {/* Directory Listings Container - Fixed Scroll Window */}
-          <div className="mc-scroll flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
+          {/* Directory Listings */}
+          <div className="mc-scroll flex-1 min-h-0 overflow-y-auto pr-1 space-y-1.5">
             {lobbyStats.allRooms.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-4 rounded-xl border border-dashed border-white/10 bg-white/5">
-                <Globe size={36} className="text-white/20 mb-2 animate-pulse" />
+              <div className="flex flex-col items-center justify-center h-full text-center p-3 rounded-xl border border-dashed border-white/10 bg-white/5">
+                <Globe size={32} className="text-white/20 mb-1.5 animate-pulse" />
                 <p className="text-xs font-semibold text-white/70">No active lobby rooms right now.</p>
-                <p className="text-[0.68rem] text-white/40 mt-1">Host a public or secret private room on the right menu to begin!</p>
+                <p className="text-[0.65rem] text-white/40 mt-0.5">Host a public or secret room on the right panel to begin!</p>
               </div>
             ) : (
               lobbyStats.allRooms.map((room) => (
                 <div
                   key={room.roomCode}
-                  className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                    room.isPrivate
-                      ? "bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50"
-                      : "bg-white/5 hover:bg-white/10 border-white/10"
-                  }`}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${room.isPrivate
+                    ? "bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50"
+                    : "bg-white/5 hover:bg-white/10 border-white/10"
+                    }`}
                 >
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="mc-display text-sm font-bold text-white tracking-widest">{room.roomCode}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="mc-display text-xs font-bold text-white tracking-widest">{room.roomCode}</span>
                       {room.isPrivate ? (
-                        <span className="text-[0.58rem] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
-                          <Lock size={9} /> PRIVATE (LOCKED)
+                        <span className="text-[0.55rem] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-0.5">
+                          <Lock size={8} /> PRIVATE
                         </span>
                       ) : (
-                        <span className="text-[0.58rem] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
+                        <span className="text-[0.55rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
                           PUBLIC · 1/2 PLAYERS
                         </span>
                       )}
                     </div>
-                    <p className="text-[0.68rem] text-[#a5b9e0] mt-0.5">Host: {room.hostName}</p>
+                    <p className="text-[0.62rem] text-[#a5b9e0] mt-0.5">Host: {room.hostName}</p>
                   </div>
 
                   {room.isPrivate ? (
@@ -237,16 +235,16 @@ export function LobbyPage({
                         setPrivateNotice("🔒 Private Room: Requires 6-character room code or invite link from host");
                         setTimeout(() => setPrivateNotice(null), 4500);
                       }}
-                      className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-3 py-1.5 font-bold rounded-lg cursor-pointer hover:bg-amber-500/30"
+                      className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-2.5 py-1 font-bold rounded-lg cursor-pointer hover:bg-amber-500/30"
                       title="Private Room — Cannot join directly from directory"
                     >
-                      <Lock size={12} /> LOCKED
+                      <Lock size={11} /> LOCKED
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleJoinPublicRoom(room.roomCode)}
-                      className="mc-btn mc-btn-primary text-xs px-3.5 py-1.5 font-bold shadow-md"
+                      className="mc-btn mc-btn-primary text-xs px-3 py-1 font-bold shadow-md"
                     >
                       JOIN
                     </button>
@@ -256,54 +254,54 @@ export function LobbyPage({
             )}
           </div>
 
-          <div className="shrink-0 mt-3 rounded-xl border border-white/10 bg-black/20 p-2.5 text-[0.65rem] text-white/60 space-y-0.5">
+          <div className="shrink-0 mt-2 rounded-xl border border-white/10 bg-black/20 p-2 text-[0.62rem] text-white/60 space-y-0.5">
             <p className="font-semibold text-[#c084fc] flex items-center gap-1">
-              <Globe size={11} /> Lobby Information
+              <Globe size={10} /> Lobby Information
             </p>
             <p>• Public rooms are free & joinable by anyone until 2 players join.</p>
-            <p>• Secret private rooms cost ₹25 & require entering the code or link.</p>
+            <p>• Secret private rooms cost ₹25 & require entering code/link.</p>
           </div>
         </div>
 
-        {/* RIGHT SIDE: CREATION & MATCH MENU PANEL */}
-        <div className="mc-slate mc-goldleaf flex w-full flex-col p-4 sm:p-5 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0">
+        {/* RIGHT PANEL: ZERO-SCROLL HIGH-DENSITY MATCH MENU */}
+        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0 justify-between">
           {/* Main Navigation Mode Tabs */}
-          <div className="shrink-0 mb-3 grid grid-cols-3 gap-2">
+          <div className="shrink-0 mb-2 grid grid-cols-3 gap-1.5">
             <button
               type="button"
-              className="mc-chip flex items-center justify-center gap-1.5 px-1 py-2 text-xs"
+              className="mc-chip flex items-center justify-center gap-1 px-1 py-2 text-xs font-semibold"
               onClick={() => onSwitchTab?.("ai")}
             >
-              <Swords size={14} /> Computer
+              <Swords size={13} /> Computer
             </button>
             <button
               type="button"
-              className="mc-chip flex items-center justify-center gap-1.5 px-1 py-2 text-xs"
+              className="mc-chip flex items-center justify-center gap-1 px-1 py-2 text-xs font-semibold"
               onClick={() => onSwitchTab?.("hotseat")}
             >
-              <Users size={14} /> 2 Players
+              <Users size={13} /> 2 Players
             </button>
             <button
               type="button"
-              className="mc-chip flex items-center justify-center gap-1.5 px-1 py-2 text-xs"
+              className="mc-chip flex items-center justify-center gap-1 px-1 py-2 text-xs font-semibold"
               data-active={true}
             >
-              <Globe size={14} /> Online Mode
+              <Globe size={13} /> Online
             </button>
           </div>
 
-          {/* Menu Controls Container - Independent Internal Scroll */}
-          <div className="mc-scroll flex-1 min-h-0 overflow-y-auto pr-1">
-            <div className="mc-fade space-y-3">
-              {/* Commander Name Input */}
+          {/* 2-Column Side-by-Side Menu Options Grid - EVERYTHING VISIBLE NO SCROLL */}
+          <div className="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-hidden">
+            {/* Column 1: Commander Name & Room Creation */}
+            <div className="flex flex-col justify-between space-y-2">
               <div>
-                <p className="mc-display mb-1 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Your Commander Name</p>
+                <p className="mc-display mb-1 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Your Commander Name</p>
                 <div className="relative flex items-center">
-                  <User size={14} className="absolute left-3 text-[#c084fc]" />
+                  <User size={13} className="absolute left-2.5 text-[#c084fc]" />
                   <input
                     type="text"
-                    className="mc-chip w-full pl-9 pr-3 py-1.5 text-sm font-semibold text-white outline-none focus:border-[#c084fc]"
-                    placeholder="Enter your commander name..."
+                    className="mc-chip w-full pl-8 pr-2.5 py-1.5 text-xs font-semibold text-white outline-none focus:border-[#c084fc]"
+                    placeholder="Enter commander name..."
                     maxLength={24}
                     value={playerName}
                     onChange={(e) => handlePlayerNameChange(e.target.value)}
@@ -312,10 +310,10 @@ export function LobbyPage({
               </div>
 
               {/* Room Creation & Join Sub-Tabs */}
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-1">
                 <button
                   type="button"
-                  className="mc-chip py-1.5 text-[0.65rem] font-bold"
+                  className="mc-chip py-1 text-[0.6rem] font-bold"
                   data-active={onlineTab === "public_create"}
                   onClick={() => setOnlineTab("public_create")}
                 >
@@ -323,16 +321,16 @@ export function LobbyPage({
                 </button>
                 <button
                   type="button"
-                  className="mc-chip py-1.5 text-[0.65rem] font-bold text-amber-300"
+                  className="mc-chip py-1 text-[0.6rem] font-bold text-amber-300"
                   data-active={onlineTab === "private_create"}
                   onClick={() => setOnlineTab("private_create")}
                 >
-                  <Lock size={10} className="inline mr-1 text-amber-400" />
+                  <Lock size={9} className="inline mr-0.5 text-amber-400" />
                   Private (₹25)
                 </button>
                 <button
                   type="button"
-                  className="mc-chip py-1.5 text-[0.65rem] font-bold"
+                  className="mc-chip py-1 text-[0.6rem] font-bold"
                   data-active={onlineTab === "join"}
                   onClick={() => setOnlineTab("join")}
                 >
@@ -340,87 +338,67 @@ export function LobbyPage({
                 </button>
               </div>
 
-              {/* Public Room Creation Box */}
+              {/* Public Room Box */}
               {onlineTab === "public_create" && (
-                <div className="space-y-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 text-center">
+                <div className="space-y-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-2 text-center">
                   <div className="flex items-center justify-between">
-                    <span className="text-[0.62rem] font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1">
-                      <Globe size={12} /> Public Room Invite Code
+                    <span className="text-[0.6rem] font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-0.5">
+                      <Globe size={11} /> Invite Code
                     </span>
-                    <span className="text-[0.58rem] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">FREE · MAX 2 PLAYERS</span>
+                    <span className="text-[0.55rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">FREE</span>
                   </div>
 
                   <button
                     type="button"
                     onClick={copyCodeOnly}
-                    className="mc-display text-xl font-bold tracking-[0.3em] text-white hover:text-emerald-400 transition-colors cursor-pointer w-full py-1 rounded-lg bg-black/40 border border-emerald-500/30 flex items-center justify-center gap-2 group"
-                    title="Click to copy room code"
+                    className="mc-display text-lg font-bold tracking-[0.25em] text-white hover:text-emerald-400 transition-colors cursor-pointer w-full py-0.5 rounded-lg bg-black/40 border border-emerald-500/30 flex items-center justify-center gap-1.5 group"
                   >
                     <span>{hostCode}</span>
-                    <Copy size={14} className="opacity-60 group-hover:opacity-100 text-emerald-400" />
+                    <Copy size={13} className="opacity-60 group-hover:opacity-100 text-emerald-400" />
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      className="mc-btn flex items-center justify-center gap-1.5 py-1 text-xs"
-                      onClick={copyCodeOnly}
-                    >
-                      {copiedMode === "code" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                      {copiedMode === "code" ? "Copied!" : "Copy Code"}
+                  <div className="grid grid-cols-2 gap-1">
+                    <button type="button" className="mc-btn py-1 text-[0.65rem]" onClick={copyCodeOnly}>
+                      {copiedMode === "code" ? <Check size={11} className="text-emerald-400 inline" /> : <Copy size={11} className="inline" />} Copy
                     </button>
-
-                    <button
-                      type="button"
-                      className="mc-btn flex items-center justify-center gap-1.5 py-1 text-xs mc-btn-primary"
-                      onClick={copyInviteLink}
-                    >
-                      {copiedMode === "link" ? <Check size={13} className="text-emerald-400" /> : <Link size={13} />}
-                      {copiedMode === "link" ? "Link Copied!" : "Copy Link"}
+                    <button type="button" className="mc-btn mc-btn-primary py-1 text-[0.65rem]" onClick={copyInviteLink}>
+                      {copiedMode === "link" ? <Check size={11} className="text-emerald-400 inline" /> : <Link size={11} className="inline" />} Link
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Private Room Creation Box */}
+              {/* Private Room Box */}
               {onlineTab === "private_create" && (
-                <div className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-center">
+                <div className="space-y-1.5 rounded-xl border border-amber-500/30 bg-amber-950/20 p-2 text-center">
                   <div className="flex items-center justify-between">
-                    <span className="text-[0.62rem] font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1">
-                      <Lock size={12} /> Secret Private Room
+                    <span className="text-[0.6rem] font-bold tracking-wider text-amber-400 uppercase flex items-center gap-0.5">
+                      <Lock size={11} /> Secret Room
                     </span>
-                    <span className="text-[0.58rem] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">₹25 FEE · HIDDEN</span>
+                    <span className="text-[0.55rem] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono font-bold">₹25 FEE</span>
                   </div>
 
                   {isPrivatePaid ? (
                     <>
-                      <div className="flex items-center justify-center gap-1 text-xs text-emerald-400 font-bold bg-emerald-500/15 py-1 rounded-lg border border-emerald-500/30">
-                        <ShieldCheck size={14} /> Private Room Unlocked & Active!
+                      <div className="flex items-center justify-center gap-1 text-[0.65rem] text-emerald-400 font-bold bg-emerald-500/15 py-0.5 rounded border border-emerald-500/30">
+                        <ShieldCheck size={12} /> Unlocked & Active!
                       </div>
                       <button
                         type="button"
                         onClick={copyCodeOnly}
-                        className="mc-display text-xl font-bold tracking-[0.3em] text-white hover:text-amber-400 transition-colors cursor-pointer w-full py-1 rounded-lg bg-black/40 border border-amber-500/30 flex items-center justify-center gap-2 group"
+                        className="mc-display text-lg font-bold tracking-[0.25em] text-white hover:text-amber-400 transition-colors cursor-pointer w-full py-0.5 rounded-lg bg-black/40 border border-amber-500/30 flex items-center justify-center gap-1.5 group"
                       >
                         <span>{hostCode}</span>
-                        <Copy size={14} className="text-amber-400" />
+                        <Copy size={13} className="text-amber-400" />
                       </button>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button type="button" className="mc-btn py-1 text-xs" onClick={copyCodeOnly}>
-                          {copiedMode === "code" ? "Copied!" : "Copy Code"}
-                        </button>
-                        <button type="button" className="mc-btn mc-btn-primary py-1 text-xs" onClick={copyInviteLink}>
-                          {copiedMode === "link" ? "Link Copied!" : "Copy Link"}
-                        </button>
-                      </div>
                     </>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setShowPrivateModal(true)}
-                      className="mc-pulse flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(245,158,11,0.5)] hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                      className="mc-pulse flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-amber-500 to-purple-600 py-1.5 text-xs font-bold text-white shadow-md hover:brightness-110 cursor-pointer"
                     >
-                      <Sparkles size={14} /> Unlock Private Room (₹25 Razorpay)
+                      <Sparkles size={12} /> Unlock Private (₹25)
                     </button>
                   )}
                 </div>
@@ -428,85 +406,87 @@ export function LobbyPage({
 
               {/* Join Code Mode */}
               {onlineTab === "join" && (
-                <div className="space-y-1.5 rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <p className="mc-display text-[0.62rem] tracking-[0.2em] text-[#c084fc]">Enter Room Code</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="mc-chip uppercase flex-1 px-3 py-1.5 text-center text-base font-bold tracking-widest text-white outline-none focus:border-[#c084fc]"
-                      placeholder="e.g. 7X9K2A"
-                      maxLength={8}
-                      value={joinCode}
-                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    />
-                  </div>
+                <div className="space-y-1 rounded-xl border border-white/10 bg-white/5 p-2">
+                  <p className="mc-display text-[0.6rem] tracking-[0.2em] text-[#c084fc]">Enter Room Code</p>
+                  <input
+                    type="text"
+                    className="mc-chip uppercase w-full px-2 py-1 text-center text-sm font-bold tracking-widest text-white outline-none focus:border-[#c084fc]"
+                    placeholder="e.g. 7X9K2A"
+                    maxLength={8}
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  />
                 </div>
               )}
+            </div>
 
-              {/* Banner Pick */}
+            {/* Column 2: Banner, Hourglass & Muster */}
+            <div className="flex flex-col justify-between space-y-2">
+              {/* Banner Selector */}
               <div>
-                <p className="mc-display mb-1.5 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Your Banner</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="mc-display mb-1 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Your Banner</p>
+                <div className="grid grid-cols-2 gap-1">
                   {(["w", "b"] as Faction[]).map((color) => (
                     <button
                       key={color}
                       type="button"
-                      className="mc-chip flex items-center justify-center gap-2 py-1.5"
+                      className="mc-chip flex items-center justify-center gap-1 py-1.5 text-[0.65rem]"
                       data-active={playerColor === color}
                       onClick={() => setPlayerColor(color)}
                     >
-                      <Crest faction={color} size={16} active={playerColor === color} />
+                      <Crest faction={color} size={14} active={playerColor === color} />
                       {color === "w" ? "Vikramaditya" : "Suryadev"}
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Hourglass Selection */}
-            <div className="mt-3">
-              <p className="mc-display mb-1 text-[0.62rem] tracking-[0.3em] text-[#c084fc]">Hourglass</p>
-              <div className="grid grid-cols-4 gap-2">
-                {CLOCKS.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    className="mc-chip py-1.5 text-xs"
-                    data-active={clock === option.value}
-                    onClick={() => setClock(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+              {/* Hourglass Timer */}
+              <div>
+                <p className="mc-display mb-1 text-[0.6rem] tracking-[0.3em] text-[#c084fc]">Hourglass Timer</p>
+                <div className="grid grid-cols-4 gap-1">
+                  {CLOCKS.map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      className="mc-chip py-1 text-[0.65rem]"
+                      data-active={clock === option.value}
+                      onClick={() => setClock(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Muster Choice */}
+              <div>
+                <MusterSection choice={muster} onChange={onMuster} />
               </div>
             </div>
-
-            <div className="mc-rule my-3" />
-
-            <MusterSection choice={muster} onChange={onMuster} />
           </div>
 
           {/* Action & Settings Buttons Footer */}
-          <div className="shrink-0 mt-3 space-y-1.5">
+          <div className="shrink-0 mt-2 space-y-1">
             <button
               type="button"
-              className="mc-btn mc-btn-primary flex w-full items-center justify-center gap-2 py-3 text-sm font-bold shadow-md"
+              className="mc-btn mc-btn-primary flex w-full items-center justify-center gap-2 py-2.5 text-xs sm:text-sm font-bold shadow-md"
               onClick={handleStartOnlineMatch}
             >
-              <Crown size={16} />{" "}
+              <Crown size={15} />{" "}
               {onlineTab === "private_create" && !isPrivatePaid
                 ? "Pay ₹25 & Host Private Room"
                 : onlineTab === "join"
-                ? "Join Friend Game"
-                : "Host Public Room"}
+                  ? "Join Friend Game"
+                  : "Host Public Room"}
             </button>
 
             <button
               type="button"
-              className="mc-btn flex w-full items-center justify-center gap-2 py-1.5 text-xs"
+              className="mc-btn flex w-full items-center justify-center gap-1.5 py-1 text-[0.68rem]"
               onClick={onOpenSettings}
             >
-              <SettingsIcon size={14} /> Settings
+              <SettingsIcon size={13} /> Settings
             </button>
           </div>
         </div>
@@ -524,7 +504,7 @@ export function LobbyPage({
       />
 
       {/* Footer hint */}
-      <p className="mc-menu-hint mt-2 shrink-0 text-[0.65rem] tracking-[0.2em] text-[#7d6f57]">
+      <p className="mc-menu-hint mt-1 shrink-0 text-[0.62rem] tracking-[0.2em] text-[#7d6f57]">
         {hasKeyboard
           ? "DRAG TO ORBIT · SCROLL TO ZOOM · CLICK A FIGURE TO COMMAND IT"
           : "DRAG TO ORBIT · PINCH TO ZOOM · TAP A FIGURE TO COMMAND IT"}
