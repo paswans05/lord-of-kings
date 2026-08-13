@@ -69,7 +69,7 @@ export function LobbyPage({
     lobbyService.setPlayerName(name);
     try {
       window.localStorage.setItem("kg.playername", name);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -191,18 +191,18 @@ export function LobbyPage({
 
       {/* Split 2-Column Dashboard: Unified Glassmorphism Dashboard Layout */}
       <div className="mc-rise flex w-full max-w-6xl flex-1 flex-col gap-2.5 min-h-0 md:flex-row md:items-stretch overflow-hidden">
-        
-        {/* LEFT PANEL: LIVE LOBBY ROOMS DIRECTORY */}
-        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0">
+
+        {/* LEFT PANEL: LIVE LOBBY ROOMS DIRECTORY (COMPACT ~34%) */}
+        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-[34%] h-full min-h-0 overflow-hidden shrink-0">
           <div className="shrink-0 mb-2 flex items-center justify-between border-b border-white/10 pb-1.5">
             <div className="flex items-center gap-1.5">
               <Globe size={14} className="text-[#c084fc]" />
               <h2 className="mc-display text-xs font-bold tracking-wider text-white uppercase">
-                Live Lobby Directory ({lobbyStats.allRooms.length})
+                Live Directory ({lobbyStats.allRooms.length})
               </h2>
             </div>
             <span className="text-[0.58rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
-              MAX 2 PLAYERS
+              MAX 2
             </span>
           </div>
 
@@ -217,29 +217,28 @@ export function LobbyPage({
             {lobbyStats.allRooms.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-3 rounded-xl border border-dashed border-white/10 bg-white/5">
                 <Globe size={32} className="text-white/20 mb-1.5 animate-pulse" />
-                <p className="text-xs font-semibold text-white/70">No active lobby rooms right now.</p>
-                <p className="text-[0.65rem] text-white/40 mt-0.5">Host a public or secret room on the right panel to begin!</p>
+                <p className="text-xs font-semibold text-white/70">No active lobby rooms.</p>
+                <p className="text-[0.65rem] text-white/40 mt-0.5">Host a public or secret room on the right panel!</p>
               </div>
             ) : (
               lobbyStats.allRooms.map((room) => (
                 <div
                   key={room.roomCode}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                    room.isPrivate
+                  className={`flex items-center justify-between p-2 rounded-xl border transition-all ${room.isPrivate
                       ? "bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50"
                       : "bg-white/5 hover:bg-white/10 border-white/10"
-                  }`}
+                    }`}
                 >
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <span className="mc-display text-xs font-bold text-white tracking-widest">{room.roomCode}</span>
                       {room.isPrivate ? (
-                        <span className="text-[0.55rem] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-0.5">
+                        <span className="text-[0.55rem] bg-amber-500/20 text-amber-300 px-1 py-0.5 rounded font-mono font-bold flex items-center gap-0.5">
                           <Lock size={8} /> PRIVATE
                         </span>
                       ) : (
-                        <span className="text-[0.55rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                          PUBLIC · 1/2 PLAYERS
+                        <span className="text-[0.55rem] bg-emerald-500/20 text-emerald-300 px-1 py-0.5 rounded font-mono font-bold">
+                          PUBLIC
                         </span>
                       )}
                     </div>
@@ -253,16 +252,16 @@ export function LobbyPage({
                         setPrivateNotice("🔒 Private Room: Requires 6-character room code or invite link from host");
                         setTimeout(() => setPrivateNotice(null), 4500);
                       }}
-                      className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-2.5 py-1 font-bold rounded-lg cursor-pointer hover:bg-amber-500/30"
+                      className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-2 py-1 font-bold rounded-lg cursor-pointer hover:bg-amber-500/30"
                       title="Private Room — Cannot join directly from directory"
                     >
-                      <Lock size={11} /> LOCKED
+                      <Lock size={10} /> LOCKED
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleJoinPublicRoom(room.roomCode)}
-                      className="mc-btn mc-btn-primary text-xs px-3 py-1 font-bold shadow-md"
+                      className="mc-btn mc-btn-primary text-xs px-2.5 py-1 font-bold shadow-md"
                     >
                       JOIN
                     </button>
@@ -277,12 +276,12 @@ export function LobbyPage({
               <Globe size={10} /> Lobby Information
             </p>
             <p>• Public rooms are free & joinable by anyone until 2 players join.</p>
-            <p>• Secret private rooms cost ₹25 & require entering code/link.</p>
+            <p>• Secret private rooms cost ₹25 & require code/link.</p>
           </div>
         </div>
 
-        {/* RIGHT PANEL: UNIFIED GLASS DASHBOARD SETUP */}
-        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-1/2 h-full min-h-0 overflow-hidden shrink-0 justify-between">
+        {/* RIGHT PANEL: UNIFIED GLASS DASHBOARD SETUP (EXPANDED ~66%) */}
+        <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-[66%] h-full min-h-0 overflow-hidden shrink-0 justify-between">
           {/* Main Navigation Mode Tabs */}
           <div className="shrink-0 mb-2 grid grid-cols-3 gap-1.5">
             <button
@@ -573,10 +572,10 @@ export function LobbyPage({
               {activeMode !== "online"
                 ? "Take the field"
                 : onlineTab === "private_create" && !isPrivatePaid
-                ? "Pay ₹25 & Host Private Room"
-                : onlineTab === "join"
-                ? "Join Friend Game"
-                : "Host Public Room"}
+                  ? "Pay ₹25 & Host Private Room"
+                  : onlineTab === "join"
+                    ? "Join Friend Game"
+                    : "Host Public Room"}
             </button>
 
             <button
