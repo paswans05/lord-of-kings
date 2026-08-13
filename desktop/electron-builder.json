@@ -1,0 +1,43 @@
+{
+  "appId": "com.kingsfall.chess3d.desktop",
+  "productName": "King's Fall 3D Chess",
+  "copyright": "Copyright © 2026 King's Fall Team",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "../web/dist/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "${productName}-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "King's Fall 3D Chess"
+  },
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.games",
+    "artifactName": "${productName}-${version}.${ext}"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Game",
+    "artifactName": "${productName}-${version}.${ext}"
+  }
+}

@@ -1,15 +1,33 @@
-# Kings Fall — Dravida 3D Chess
+# King's Fall — Dravida 3D Chess
 
-A cinematic 3D chess game in the browser. Four rival Indian civilisations — the **Dravida Kingdom**, the **Kalinga Sun Empire**, the **Maratha Empire**, and the **Kingdom of Magadha** —
-face each other as sculpted, rigged characters that march, strike, scream and burn away into
-dust on a marble-and-basalt board. Either side can muster any of the four armies.
+A cinematic 3D chess game available for **Web**, **Desktop** (Windows, macOS, Linux), and **Mobile** (Android & iOS). Four rival Indian civilisations — the **Dravida Kingdom**, the **Kalinga Sun Empire**, the **Maratha Empire**, and the **Kingdom of Magadha** — face each other as sculpted, rigged characters that march, strike, scream and burn away into dust on a marble-and-basalt board. Either side can muster any of the four armies.
 
-Built with **Vite + React 19 + TypeScript + three.js**, [chess.js](https://github.com/jhlywa/chess.js)
-for the rules, and a **Web Worker** search engine for the computer opponent. No backend, no
-account, no build-time asset pipeline — it is a static site.
+Built with **Vite + React 19 + TypeScript + three.js**, [chess.js](https://github.com/jhlywa/chess.js) for the rules, a **Web Worker** search engine for the computer opponent, **PeerJS + SSE** for real-time multiplayer, **Electron** for native desktop apps, and **Flutter** for native mobile apps.
 
 ```bash
-cd web && bun install && bun run dev
+# Clone repository
+git clone <your-repo-url>
+cd lord-of-kings
+
+# Web App
+cd web && npm install && npm run dev     # http://localhost:5173
+
+# Desktop Application (Electron)
+cd ../desktop && npm install && npm run dev
+
+# Mobile Application (Flutter)
+cd ../mobile && flutter pub get && flutter run
+```
+
+---
+
+## 🏗️ Multi-Platform Project Structure
+
+```
+lord-of-kings/
+├── web/        (Vite + React 19 + Three.js 3D Web Application)
+├── desktop/    (Electron Standalone Desktop App for Windows/macOS/Linux)
+└── mobile/     (Flutter Standalone Mobile App for Android & iOS)
 ```
 
 ---
@@ -17,123 +35,100 @@ cd web && bun install && bun run dev
 ## Table of contents
 
 - [Features](#features)
-- [Quick start](#quick-start)
+- [Quick Start & How to Run](#quick-start--how-to-run)
+  - [Web Application](#1-web-application-web)
+  - [Desktop Application](#2-desktop-application-desktop)
+  - [Mobile Application](#3-mobile-application-mobile)
 - [Controls](#controls)
   - [Queuing a move while the machine thinks](#queuing-a-move-while-the-machine-thinks)
 - [Interface](#interface)
-  - [Reading the promotion picker](#reading-the-promotion-picker)
-- [Game modes](#game-modes)
-- [Armies](#armies)
-- [Battlegrounds](#battlegrounds)
-- [Project structure](#project-structure)
-- [Architecture](#architecture)
-- [The computer opponent](#the-computer-opponent)
-- [Graphics presets](#graphics-presets)
-- [Character animation](#character-animation)
-- [Swapping in your own models](#swapping-in-your-own-models)
-- [Audio](#audio)
-- [Scripts](#scripts)
-- [The share card](#the-share-card)
-- [Browser support](#browser-support)
-- [Contributing](#contributing)
+- [Game Modes & Real-Time Multiplayer](#game-modes--real-time-multiplayer)
+- [Armies & Battlegrounds](#armies--battlegrounds)
 - [License](#license)
 
 ---
 
 ## Features
 
-- **Full chess rules** — castling, en passant, promotion, check, checkmate, stalemate,
-  threefold repetition, the fifty-move rule and insufficient material, all via chess.js.
-- **Rigged 3D characters, not chess pieces** — eighteen sculpts (six per army), each with
-  `idle`, `walk`, `attack` and `death` skeletal clips, plus weapons, shields and a floating
-  rank crest.
-- **The two armies are never in doubt** — every figure stands inside a band painted on its tile
-  and carries a faction rim light along its silhouette: azure for the near side, ember for the
-  far one. The band's *shape* differs as well as its colour (a plain double band against a
-  spiked sun collar), so the two sides stay separable for a colour-blind player, on a phone, in
-  the darkest map, and in a mirror match where both sides muster the same sculpts.
-- **Three army skins, chosen per side** — Ivory Kingdom, Sun Empire or the Grande Armée, each
-  with its own six sculpts, clips, weapon family and voices. Swap either side at any time in
-  **Settings → Armies**; the choice is remembered between visits.
-- **Figures march, they do not slide** — a moved piece turns to face its destination, walks
-  the distance on its own legs at the cadence of its rank, and squares up again on arrival.
-  Knights keep the leap, running through the air and landing on both feet.
-- **Synthesised footsteps on the stride clock** — every footfall is fired by the same clock
-  that retimes the walk cycle, so sound, grit puff and foot all land together: scuffs for
-  footsoldiers, leather for the clergy, plate for the tower guardians, a slow deliberate
-  tread for the crown.
-- **Cinematic captures** — the camera punches in, the attacker strikes on the hit frame,
-  sparks fly, the screen shakes, and the defender **burns away from the soles upward**
-  through a ragged edge of light, shedding motes that drift off (cold soul-light for the
-  Kingdom, live embers for the Empire).
-- **The square changes hands** — the moment a victor's boot comes down on the tile it has just
-  cleared, its own colours **close inward** over the square (every other ring on this board
-  travels outward, so the reversed motion is unmistakable), the army's mark seals under it,
-  chips of the old occupant's stone are thrown up, and the figure draws itself up to full
-  height. Over the top of it, a short brass motif rises a perfect fifth — the one sound in the
-  game that means *conquest* rather than violence. All of it is keyed to **what was taken**, so
-  trading a footsoldier never sounds like felling a queen.
-- **A blow that scales with rank** — the footsoldier stabs and moves on; the rider cuts on the
-  charge and leaves an arc of steel hanging in the air; the tower guardian's hammer sends a
-  wave rolling across the stone and the hall keeps shaking afterwards; the crown drops a
-  **column of light on the condemned**, rings a bell over it, and executes it in gold. Each
-  rank has its own lens punch, hitstop, swing weight and aftershock.
-- **Casters kill at range** — the queen and the mage never close the distance. They level the
-  staff from their own square, gather fire at the crystal, and throw it down the line: it
-  lights the hall as it flies, breaks open on the body, and only once the corpse has burned
-  away do they walk the whole distance and take the square. The mage throws **one** bolt; the
-  sorceress throws a **volley of three** and leaves a ring of fire burning on the square (cold
-  witchfire for the Kingdom, sunfire for the Empire).
-- **Eighteen death cries** — one recorded voice per rank per army, panned to where the body is
-  on screen, ducking the music for a beat and pitch-jittered so no two deaths sound alike. Each
-  army dies in its own language of pain: the Ivory Kingdom roars and groans, the Sun Empire
-  shrieks and hisses, and the Grande Armée — being shot rather than struck — has the air punched
-  out of it first and the voice second.
-- **The check alarm** — the instant a king falls under the sword, the hall itself reacts: a red
-  lamp lights over the threatened crown, red light bleeds in from the far edges of the screen, and
-  the camera picks up a faint low rumble. It is deliberately quiet: the surge is gone in under a
-  second, the wash never reaches the board, and the lamp then keeps breathing at a low level for as
-  long as the king stays in check. A warning has to be noticed, not endured — the alarm names the
-  crown in danger without tinting the figures or moving the board under the player's eye.
-- **Four battlegrounds** that relight the whole world — sky, haze, stone colour, tile
-  contrast, fires, birds, siege engines and the film grade.
-- **2D tactical view** — one key lifts the camera straight overhead and flattens every figure
-  into a stamped counter, so nothing can hide a square. Selection and moving keep working.
-- **Three engine strengths** running off the main thread, so the render loop never blocks.
-- **AI vs AI / attract mode** — let two engines duel on their own with pace control, pause,
-  auto-rematch, and a clean capture view with the entire interface hidden. Three camera
-  behaviours: hold one angle, follow the figure on the move and close in on the fight, or
-  drift slowly around the board. The follow rig **leans** towards the action instead of
-  chasing it into the hall wall, so the picture no longer shudders while it tracks. AI vs AI also renders crisper than a played game —
-  no depth of field, softer grain, vignette and bloom. Every AI vs AI duel now **ends with a
-  verdict card**: who won and how, the two engine strengths, the record, a countdown on the next
-  duel that can be held, and one tap to roll another duel or return to the hall.
-- **An interface that stays off the board** — icon-only controls with a themed tooltip on every
-  one of them (name, one-line explanation, key cap), the move record folded into a corner
-  sigil, and a slim showcase rail that collapses to a single icon. One key strips the whole
-  overlay for recording.
-- **Auto-detected graphics presets** (Low → Ultra) with an automatic step-down if the
-  measured frame rate stays low, plus WebGL context-loss recovery.
-- **Chess clocks**, undo, resign, flip board, copyable PGN, captured tray with material score.
-- **Field tally** in the top-left corner: figures lost and time on the field for each army, ticking
-  live even in an untimed duel.
+- **Full chess rules** — castling, en passant, promotion, check, checkmate, stalemate, threefold repetition, fifty-move rule via chess.js.
+- **🌐 Real-Time Cross-Device Multiplayer** — WebRTC Peer-to-Peer matchmaking via PeerJS with global real-time room discovery (`ntfy.sh` SSE pub/sub) & active host connection verification.
+- **🏰 Live Lobby Directory** — Browse active public rooms (`JOIN`) or host secret private rooms (₹25 Razorpay unlock).
+- **📱💻 Multi-Platform Native Builds** — Run natively on Web browsers, Desktop (.exe / .dmg / .AppImage via Electron), and Mobile phones (Android APK / iOS via Capacitor).
+- **Rigged 3D characters, not chess pieces** — eighteen sculpts (six per army), each with `idle`, `walk`, `attack` and `death` skeletal clips, plus weapons, shields and a floating rank crest.
+- **Synthesised footsteps & 18 death cries** — scuffs for footsoldiers, leather for clergy, plate for tower guardians, and authentic voice acting.
+- **Cinematic captures** — camera punches in, defender burns away through light motes (cold soul-light for Dravida, embers for Sun Empire).
+- **Five Battleground Arenas** — Granite Hall, Maharaja Court, Obsidian Temple, Emerald Sanctuary, and Gold Fortress with dynamic relighting and atmospheric particle effects.
+- **Zero-Scroll Glassmorphism Interface** — high-density widescreen dashboard layout with ambient 3D hall shine-through.
 
-## Quick start
+---
 
-Requires **Node 20+**. [Bun](https://bun.sh) is recommended; npm/pnpm work too.
+## Quick Start & How to Run
+
+Requires **Node 20+**. `npm`, `pnpm`, `bun` or `yarn` work cleanly.
+
+### 1. Web Application (`web/`)
 
 ```bash
-git clone <your-fork-url>
-cd <repo>/web
+cd web
 
-bun install
-bun run dev        # http://localhost:5173
-bun run build      # production bundle in web/dist/
-bun run preview    # serve the built bundle
+# Install dependencies
+npm install
+
+# Start local dev server (http://localhost:5173)
+npm run dev
+
+# Build production bundle (web/dist/)
+npm run build
+
+# Preview built bundle locally
+npm run preview
 ```
 
-The build output in `web/dist/` is a plain static site — drop it on GitHub Pages, Netlify,
-Cloudflare Pages or any static host. No environment variables are required to run the game.
+The output in `web/dist/` is a static web app — deployable to Vercel, Netlify, GitHub Pages, or any static host.
+
+---
+
+### 2. Desktop Application (`desktop/`)
+
+Run native standalone Desktop window or package Windows `.exe` installer, macOS `.dmg`, and Linux `.AppImage`.
+
+```bash
+cd desktop
+
+# Install desktop dependencies
+npm install
+
+# Run Electron desktop window (connects to web dev server)
+npm run dev
+
+# Build TypeScript main process
+npm run build
+
+# Package native installers (.exe, .dmg, .AppImage) in desktop/release/
+npm run dist
+```
+
+---
+
+### 3. Mobile Application (`mobile/`)
+
+Standalone **Flutter Mobile Application** for Android & iOS.
+
+```bash
+cd mobile
+
+# Get Flutter packages
+flutter pub get
+
+# Run on Android or iOS device/emulator
+flutter run
+
+# Build standalone Android APK
+flutter build apk --release
+
+# Build Google Play App Bundle (AAB)
+flutter build appbundle --release
+```
 
 ## Controls
 

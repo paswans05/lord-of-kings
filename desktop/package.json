@@ -1,0 +1,26 @@
+{
+  "name": "kings-fall-desktop",
+  "version": "1.0.0",
+  "description": "King's Fall: Dravida 3D Chess Standalone Desktop Application",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc && electron .",
+    "build": "tsc",
+    "dist": "tsc && electron-builder"
+  },
+  "keywords": [
+    "chess",
+    "3d-chess",
+    "electron",
+    "desktop-app",
+    "dravida-chess"
+  ],
+  "author": "King's Fall Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.9.3"
+  }
+}
