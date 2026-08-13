@@ -30,7 +30,7 @@ type Roster<T> = Partial<Record<PieceKind, T>>;
 export type ArsenalId = "kingdom" | "sun" | "empire";
 
 /** Selectable army skins. Either side of the board can wear any of them. */
-export type ArmySkinId = "ivory" | "sun" | "empire";
+export type ArmySkinId = "ivory" | "sun" | "empire" | "magadha";
 
 /** Static (unrigged) sculpt per kind — the fallback when a rig fails to load. */
 const STILL_MODELS: Record<ArmySkinId, Roster<string>> = {
@@ -509,7 +509,7 @@ export const PIECE_MODEL_ORIENTATION = {
   localUpAxis: "positiveY",
 } as const;
 
-const CRY_BASE = "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd";
+const CRY_BASE = `${import.meta.env.BASE_URL || "/"}cries`.replace(/\/\//g, "/");
 
 /**
  * One death cry per figure per army. They are voiced in character — the ivory
@@ -726,48 +726,32 @@ export interface ArenaScore {
  * Silence bounds were found with 50 ms windows against a -50 dBFS floor.
  */
 export const ARENA_SCORES: Record<ArenaTheme, ArenaScore> = {
-  /** Bone flute and log drums under a wet canopy. */
   jungle: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/a33c5628-c5a1-442d-a13f-6fc2b8c14c31.mp3",
+    url: "/audio/scores/jungle.mp3",
     loudness: -13.5,
     lead: 0.05,
     tail: 1.5,
   },
-  /** Vielle, harp and a recorder in the morning air. */
   dawn: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/2ecff03e-6efb-4939-a03e-908b22c44ef4.mp3",
+    url: "/audio/scores/dawn.mp3",
     loudness: -21,
     lead: 0,
     tail: 2.2,
   },
-  /** Oud, ney and frame drum over hot stone. */
-  sands: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/f8a1c966-f6a4-4076-8890-b7a3de52176b.mp3",
-    loudness: -33.4,
-    lead: 0.05,
-    tail: 0.25,
-  },
-  /** Nyckelharpa drone and glass bells over snow. */
   frost: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/a396e898-7933-4eaa-b09e-c05443e9fa07.mp3",
+    url: "/audio/scores/frost.mp3",
     loudness: -13.3,
     lead: 0.1,
     tail: 0,
   },
-  /** Tremolo cello and far-off thunder. */
-  storm: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/38f30f11-e58a-42ab-9259-2915cac984cd.mp3",
+  volcano: {
+    url: "/audio/scores/storm.mp3",
     loudness: -15.1,
     lead: 0,
     tail: 0,
   },
-  /**
-   * The original siege score. Every other track is levelled against this one,
-   * because this is the one the whole mix — knocks, cries, bells, gunfire — was
-   * balanced underneath.
-   */
   dusk: {
-    url: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/3fbe58de-9d38-4d91-a002-794d0e979eb0.mp3",
+    url: "/audio/scores/dusk.mp3",
     loudness: -18.5,
     lead: 0.8,
     tail: 0.8,
@@ -776,44 +760,23 @@ export const ARENA_SCORES: Record<ArenaTheme, ArenaScore> = {
 
 /**
  * The painted card for each battleground, shown in the muster picker.
- *
- * The picker used to be a row of CSS gradients, which is an honest summary of a
- * map's *palette* and says nothing about the place: two blues and a grey cannot
- * tell a snowfield from a rainstorm, and the flat swatch gave no reason to try a
- * map the player had not picked before. These are painted establishing shots of
- * the same grounds, in one series so the row reads as a set rather than a
- * handful of stock images.
- *
- * They are decoration, not information — the label under each card is what
- * actually names the map — so they are lazily loaded and simply absent until
- * they arrive, with the old gradient still painted underneath as the backdrop.
  */
 export const ARENA_CARDS: Record<ArenaTheme, string> = {
-  jungle: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/20992cc1-d88b-4ed9-8784-cea941f0405b.png",
-  dawn: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/6a4b6904-4cd3-4e9e-b10f-21647237de73.png",
-  sands: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/74ff339e-5349-485c-a6aa-3ea838b2a4b8.png",
-  frost: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/74e91d9b-4371-4237-a718-d66d8a0b6656.png",
-  storm: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/5effa91a-f969-422c-9c95-4be195282998.png",
-  dusk: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/8b01e0a2-5ce2-4d31-aef3-7cb3521c467f.png",
+  jungle: "/cards/arenas/jungle.png",
+  dawn: "/cards/arenas/dawn.png",
+  frost: "/cards/arenas/frost.png",
+  volcano: "/cards/arenas/storm.png",
+  dusk: "/cards/arenas/dusk.png",
 };
 
 /**
  * The painted banner for each army, shown above its name in the muster picker.
- *
- * Same argument as {@link ARENA_CARDS}, one level down: a livery gradient is an
- * honest summary of an army's *colours* and says nothing about who these people
- * are — navy-white-red reads as a flag, not as a rank of shakos behind powder
- * smoke. These are painted in the same series as the battleground cards so the
- * whole muster panel reads as one set.
- *
- * Decoration, not information: the gradient stays underneath as the swatch's
- * background, and the label under each card is what actually names the army, so
- * a card whose painting has not arrived yet still reads correctly.
  */
 export const ARMY_CARDS: Record<ArmySkinId, string> = {
-  ivory: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/dc88fa56-b565-4cf8-aa98-9997c8685e5d.png",
-  sun: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/3315dcf5-50c4-455b-bf13-aec6ff2ca2fd.png",
-  empire: "https://r2-pub.rork.com/projects/g9111r67kl6tq85g540sd/assets/ea0a3e42-30f9-4a74-be8c-e74ea4513d1a.png",
+  ivory: "/cards/armies/ivory.png",
+  sun: "/cards/armies/sun.png",
+  empire: "/cards/armies/empire.png",
+  magadha: "/cards/armies/ivory.png",
 };
 
 /**
@@ -822,29 +785,13 @@ export const ARMY_CARDS: Record<ArmySkinId, string> = {
  */
 export interface LandmarkSource {
   url: string;
-  /** Height on the field, in metres. The GLB's own scale is ignored. */
   height: number;
-  /** How many copies stand on the ring. */
   count: number;
-  /** Where the first copy sits, in radians around the board. */
   bearing: number;
-  /**
-   * Yaw correction, in radians, applied after the copy is turned to face the
-   * board — a generated model's "front" is whatever the generator made it, so
-   * this is measured from the finished GLB rather than assumed.
-   */
   yaw: number;
 }
 
-/**
- * The landmark each map is built around.
- *
- * The dressing gives a map its ground cover; this gives it a *place*. See
- * `scene/landmarks.ts` for why a scatter of instanced blobs was never going to
- * be enough on its own, and how far out these stand.
- */
 export const ARENA_LANDMARKS: Partial<Record<ArenaTheme, LandmarkSource>> = {
-  /** A moss-eaten feathered-serpent head, glyphs cut along the jaw. */
   jungle: {
     url: `${MODEL_BASE}/9dd00cff-205c-4271-8c3d-81f19a5e7312.glb`,
     height: 13,
@@ -852,7 +799,6 @@ export const ARENA_LANDMARKS: Partial<Record<ArenaTheme, LandmarkSource>> = {
     bearing: 2.1,
     yaw: 0,
   },
-  /** A round watchtower with half its battlements fallen away. */
   dawn: {
     url: `${MODEL_BASE}/2dc211ea-0f2c-4f11-a403-585899dcf963.glb`,
     height: 21,
@@ -860,19 +806,6 @@ export const ARENA_LANDMARKS: Partial<Record<ArenaTheme, LandmarkSource>> = {
     bearing: 0.6,
     yaw: 0,
   },
-  /** A crowned colossus buried to the shoulders in sand. */
-  sands: {
-    url: `${MODEL_BASE}/b6b12786-f7df-4b84-b396-180f9e927376.glb`,
-    height: 17,
-    count: 2,
-    bearing: 3.5,
-    yaw: 0,
-  },
-  /**
-   * A longship wrecked in the drifts, dragon prow still up. The only sculpt of
-   * the six whose front is not local +Z — the generator reports `negativeX` —
-   * so it carries the quarter-turn that puts its prow toward the board.
-   */
   frost: {
     url: `${MODEL_BASE}/62a4c668-34ba-4fd0-947c-8ad16a07b0d3.glb`,
     height: 11,
@@ -880,15 +813,13 @@ export const ARENA_LANDMARKS: Partial<Record<ArenaTheme, LandmarkSource>> = {
     bearing: 1.2,
     yaw: Math.PI / 2,
   },
-  /** A beacon tower, roof torn off, fire basket open to the rain. */
-  storm: {
+  volcano: {
     url: `${MODEL_BASE}/9a03ed06-8aa0-4006-822e-75c3a176a6dd.glb`,
     height: 23,
     count: 2,
     bearing: 4.4,
     yaw: 0,
   },
-  /** The gatehouse the siege went through: portcullis crooked, stone burnt. */
   dusk: {
     url: `${MODEL_BASE}/aacc3a14-3a74-4e3b-be87-319278f95d42.glb`,
     height: 16,
@@ -899,10 +830,11 @@ export const ARENA_LANDMARKS: Partial<Record<ArenaTheme, LandmarkSource>> = {
 };
 
 export const AUDIO_URLS = {
-  ambience: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/e62d5bb9-8c84-4464-8696-dbcf975f938b.mp3",
-  tension: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/00baae5a-fde3-478a-8190-b1ad14d2e96d.mp3",
-  place: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/73f19d09-0275-4c4b-87cd-eeeed26a616b.mp3",
-  capture: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/64ee8170-b796-413f-8249-f1deb7803393.mp3",
-  check: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/20ebb41c-0b20-4b4b-8c75-5f78541722d3.mp3",
-  fanfare: "https://r2-pub.rork.com/generated-audio/g9111r67kl6tq85g540sd/c89fa5ef-7904-4a5f-899e-e1973b13b30f.mp3",
+  ambience: "/audio/ambience.mp3",
+  score: "/audio/score.mp3",
+  tension: "/audio/tension.mp3",
+  place: "/audio/place.mp3",
+  capture: "/audio/capture.mp3",
+  check: "/audio/check.mp3",
+  fanfare: "/audio/fanfare.mp3",
 } as const;
