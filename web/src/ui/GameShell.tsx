@@ -11,6 +11,7 @@ import {
 } from "../core/gameController";
 import type { Faction, LedgerMove, PieceKind } from "../core/types";
 import { MultiplayerService } from "../core/multiplayer";
+import { lobbyService } from "../core/lobby";
 import { Clapperboard } from "lucide-react";
 import { ARENA_LOOKS, DEFAULT_ARENA } from "../scene/arena";
 import { detectQualityPreset, type QualityPreset } from "../scene/quality";
@@ -492,6 +493,9 @@ export function GameShell() {
           },
           onHandshake: (hostColor, _muster, senderPlayerName) => {
             const oppName = senderPlayerName || "Friend";
+            if (config.online?.roomCode) {
+              lobbyService.markRoomJoined(config.online.roomCode);
+            }
             setOnlineInfo((prev) => ({ ...prev, opponentName: oppName }));
             setNotice(`⚡ CONNECTED WITH COMMANDER ${oppName.toUpperCase()}!`);
             setTimeout(() => setNotice(null), 4000);
