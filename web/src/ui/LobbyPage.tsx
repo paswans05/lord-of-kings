@@ -57,8 +57,33 @@ export function LobbyPage({
   onMuster,
   hasKeyboard = true,
 }: LobbyPageProps) {
-  // Navigation Flow State: 1. Username -> 2. Games List -> 3. Chess Game Lobby
-  const [step, setStep] = useState<"username" | "games_list" | "chess_lobby">("username");
+  const getStepFromPath = (): "username" | "games_list" | "chess_lobby" => {
+    if (typeof window === "undefined") return "username";
+    const path = window.location.pathname;
+    if (path === "/games") return "games_list";
+    if (path === "/play" || path === "/chess") return "chess_lobby";
+    return "username";
+  };
+
+  const [step, setStepState] = useState<"username" | "games_list" | "chess_lobby">(() => getStepFromPath());
+
+  const setStep = (targetStep: "username" | "games_list" | "chess_lobby") => {
+    setStepState(targetStep);
+    if (typeof window !== "undefined") {
+      const targetPath = targetStep === "username" ? "/" : targetStep === "games_list" ? "/games" : "/play";
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, "", targetPath);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = () => {
+      setStepState(getStepFromPath());
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const [activeMode, setActiveMode] = useState<"ai" | "hotseat" | "online">("online");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
@@ -539,25 +564,23 @@ export function LobbyPage({
         <>
           {/* Top Bar for Chess Lobby with Back Navigation */}
           <div className="w-full max-w-6xl shrink-0 flex items-center justify-between mb-1 px-1">
-            <button
-              type="button"
-              onClick={() => setStep("games_list")}
+            <a
+              href="/games"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all cursor-pointer shadow-sm"
             >
               <ArrowLeft size={13} />
-              <span>Game List</span>
-            </button>
+              <span>Game Directory (/games)</span>
+            </a>
 
             <div className="flex items-center gap-2 text-xs text-white/70">
               <span className="mc-display text-[#c084fc] font-bold">COMMANDER:</span>
               <span className="font-bold text-white">{playerName}</span>
-              <button
-                type="button"
-                onClick={() => setStep("username")}
+              <a
+                href="/"
                 className="text-[0.65rem] text-purple-300 underline hover:text-white ml-1 cursor-pointer"
               >
-                Change
-              </button>
+                Edit Name (/)
+              </a>
             </div>
           </div>
 
