@@ -118,7 +118,7 @@ export default function GamesCatalogPage() {
 
         {/* Games Directory Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto mc-scroll">
-          
+
           {/* GAME 1: KING'S FALL 3D CHESS (PLAYABLE NOW) */}
           <div className="mc-slate mc-goldleaf p-5 rounded-2xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-950/40 via-black/60 to-purple-900/20 flex flex-col justify-between relative overflow-hidden group hover:border-purple-400 transition-all shadow-[0_0_30px_rgba(168,85,247,0.25)]">
             <div className="absolute top-0 right-0 px-3 py-0.5 bg-gradient-to-l from-purple-600 to-indigo-600 text-white text-[0.6rem] font-extrabold tracking-widest uppercase rounded-bl-xl shadow-md">
@@ -157,14 +157,14 @@ export default function GamesCatalogPage() {
                 onClick={() => navigate("/chess")}
                 className="mc-btn mc-btn-primary py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
               >
-                <Crown size={14} /> Launch Chess (/chess)
+                <Crown size={14} /> Launch Chess
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/live-directory")}
                 className="mc-btn py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-purple-600/30 hover:bg-purple-600/50 border-purple-500/40 text-purple-200 cursor-pointer"
               >
-                <Globe size={14} /> Live Directory (/live-directory)
+                <Globe size={14} /> Live Directory
               </button>
             </div>
           </div>

@@ -132,7 +132,7 @@ export function LobbyPage({
           lobbyService.setPlayerName(user.username);
           try {
             window.localStorage.setItem("kg.playername", user.username);
-          } catch {}
+          } catch { }
         }
       } catch (err) {
         console.warn("[LobbyPage] Failed to fetch SQLite username:", err);
@@ -321,11 +321,10 @@ export function LobbyPage({
                     <button
                       key={title}
                       type="button"
-                      className={`py-1.5 px-1 rounded-lg text-[0.68rem] font-semibold border transition-all ${
-                        playerName.startsWith(title)
+                      className={`py-1.5 px-1 rounded-lg text-[0.68rem] font-semibold border transition-all ${playerName.startsWith(title)
                           ? "bg-purple-500/30 border-purple-400 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]"
                           : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
-                      }`}
+                        }`}
                       onClick={() => {
                         const cleaned = playerName.replace(/^(Commander|Warlord|Emperor|Knight)\s*/i, "").trim();
                         handlePlayerNameChange(`${title} ${cleaned}`.trim());
@@ -563,14 +562,23 @@ export function LobbyPage({
       {step === "chess_lobby" && (
         <>
           {/* Top Bar for Chess Lobby with Back Navigation */}
-          <div className="w-full max-w-6xl shrink-0 flex items-center justify-between mb-1 px-1">
-            <a
-              href="/games"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all cursor-pointer shadow-sm"
-            >
-              <ArrowLeft size={13} />
-              <span>Game Directory (/games)</span>
-            </a>
+          <div className="w-full max-w-4xl shrink-0 flex items-center justify-between mb-1 px-1">
+            <div className="flex items-center gap-2">
+              <a
+                href="/games"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all cursor-pointer shadow-sm"
+              >
+                <ArrowLeft size={13} />
+                <span>Game Directory</span>
+              </a>
+              <a
+                href="/live-directory"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-xs font-bold text-purple-300 transition-all cursor-pointer shadow-sm"
+              >
+                <Globe size={13} />
+                <span>Live Directory</span>
+              </a>
+            </div>
 
             <div className="flex items-center gap-2 text-xs text-white/70">
               <span className="mc-display text-[#c084fc] font-bold">COMMANDER:</span>
@@ -584,99 +592,10 @@ export function LobbyPage({
             </div>
           </div>
 
-          {/* Split 2-Column Dashboard: Unified Glassmorphism Dashboard Layout */}
-          <div className="mc-rise flex w-full max-w-6xl flex-1 flex-col gap-2.5 min-h-0 md:flex-row md:items-stretch overflow-hidden">
-            {/* LEFT PANEL: LIVE LOBBY ROOMS DIRECTORY */}
-            <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-[34%] h-full min-h-0 overflow-hidden shrink-0">
-              <div className="shrink-0 mb-2 flex items-center justify-between border-b border-white/10 pb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Globe size={14} className="text-[#c084fc]" />
-                  <h2 className="mc-display text-xs font-bold tracking-wider text-white uppercase">
-                    Live Directory ({lobbyStats.allRooms.length})
-                  </h2>
-                </div>
-                <span className="text-[0.58rem] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                  MAX 2
-                </span>
-              </div>
-
-              {privateNotice && (
-                <div className="shrink-0 mb-2 text-[0.65rem] font-semibold text-amber-300 bg-amber-500/20 border border-amber-500/40 p-1.5 rounded-lg text-center animate-fade-in">
-                  {privateNotice}
-                </div>
-              )}
-
-              {/* Directory Listings */}
-              <div className="mc-scroll flex-1 min-h-0 overflow-y-auto pr-1 space-y-1.5">
-                {lobbyStats.allRooms.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-3 rounded-xl border border-dashed border-white/10 bg-white/5">
-                    <Globe size={32} className="text-white/20 mb-1.5 animate-pulse" />
-                    <p className="text-xs font-semibold text-white/70">No active lobby rooms.</p>
-                    <p className="text-[0.65rem] text-white/40 mt-0.5">Host a public or secret room on the right panel!</p>
-                  </div>
-                ) : (
-                  lobbyStats.allRooms.map((room) => (
-                    <div
-                      key={room.roomCode}
-                      className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
-                        room.isPrivate
-                          ? "bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50"
-                          : "bg-white/5 hover:bg-white/10 border-white/10"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="mc-display text-xs font-bold text-white tracking-widest">{room.roomCode}</span>
-                          {room.isPrivate ? (
-                            <span className="text-[0.55rem] bg-amber-500/20 text-amber-300 px-1 py-0.5 rounded font-mono font-bold flex items-center gap-0.5">
-                              <Lock size={8} /> PRIVATE
-                            </span>
-                          ) : (
-                            <span className="text-[0.55rem] bg-emerald-500/20 text-emerald-300 px-1 py-0.5 rounded font-mono font-bold">
-                              PUBLIC
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[0.62rem] text-[#a5b9e0] mt-0.5">Host: {room.hostName}</p>
-                      </div>
-
-                      {room.isPrivate ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPrivateNotice("🔒 Private Room: Requires 6-character room code or invite link from host");
-                            setTimeout(() => setPrivateNotice(null), 4500);
-                          }}
-                          className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-2 py-1 font-bold rounded-lg cursor-pointer hover:bg-amber-500/30"
-                          title="Private Room — Cannot join directly from directory"
-                        >
-                          <Lock size={10} /> LOCKED
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleJoinPublicRoom(room.roomCode)}
-                          className="mc-btn mc-btn-primary text-xs px-2.5 py-1 font-bold shadow-md"
-                        >
-                          JOIN
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="shrink-0 mt-2 rounded-xl border border-white/10 bg-black/20 p-2 text-[0.62rem] text-white/60 space-y-0.5">
-                <p className="font-semibold text-[#c084fc] flex items-center gap-1">
-                  <Globe size={10} /> Lobby Information
-                </p>
-                <p>• Public rooms are free & joinable by anyone until 2 players join.</p>
-                <p>• Secret private rooms cost ₹25 & require code/link.</p>
-              </div>
-            </div>
-
-            {/* RIGHT PANEL: UNIFIED GLASS DASHBOARD SETUP */}
-            <div className="mc-slate mc-goldleaf flex w-full flex-col p-3 sm:p-4 md:w-[66%] h-full min-h-0 overflow-hidden shrink-0 justify-between">
+          {/* Unified Glassmorphism Dashboard Setup Panel */}
+          <div className="mc-rise flex w-full max-w-4xl flex-1 flex-col gap-2.5 min-h-0 overflow-hidden mx-auto">
+            {/* UNIFIED GLASS DASHBOARD SETUP */}
+            <div className="mc-slate mc-goldleaf flex w-full flex-col p-4 sm:p-5 rounded-2xl border border-purple-500/30 bg-[#0c0e17]/95 h-full min-h-0 overflow-hidden shrink-0 justify-between shadow-[0_0_40px_rgba(168,85,247,0.15)]">
               {/* Main Navigation Mode Tabs */}
               <div className="shrink-0 mb-2 grid grid-cols-3 gap-1.5">
                 <button

@@ -63,7 +63,7 @@ export default function NamePage() {
     lobbyService.setPlayerName(name);
     try {
       window.localStorage.setItem("kg.playername", name);
-    } catch {}
+    } catch { }
     void sqliteDb.setUsername(name);
   };
 
@@ -161,11 +161,10 @@ export default function NamePage() {
                   <button
                     key={title}
                     type="button"
-                    className={`py-2 px-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                      playerName.startsWith(title)
-                        ? "bg-purple-500/30 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.3)] font-bold"
-                        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
-                    }`}
+                    className={`py-2 px-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${playerName.startsWith(title)
+                      ? "bg-purple-500/30 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.3)] font-bold"
+                      : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                      }`}
                     onClick={() => {
                       const cleaned = playerName.replace(/^(Commander|Warlord|Emperor|Knight)\s*/i, "").trim();
                       handleNameChange(`${title} ${cleaned}`.trim());
@@ -195,14 +194,14 @@ export default function NamePage() {
                 className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#c084fc]/15 hover:bg-[#c084fc]/30 border border-[#c084fc]/40 text-[#c084fc] text-xs font-bold transition-all"
               >
                 <Globe size={14} />
-                <span>Live Directory (/live-directory)</span>
+                <span>Live Directory</span>
               </Link>
               <Link
                 to="/chess"
                 className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 text-xs font-bold transition-all"
               >
                 <Crown size={14} className="text-amber-300" />
-                <span>Launch Chess (/chess)</span>
+                <span>Launch Chess</span>
               </Link>
             </div>
           </div>
