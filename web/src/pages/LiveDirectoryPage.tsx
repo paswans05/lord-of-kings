@@ -23,7 +23,6 @@ import { sqliteDb, UserProfile, UserStats, MatchRecord } from "../db";
 import { lobbyService, type LobbyStats } from "../core/lobby";
 import { generateRoomCode } from "../core/multiplayer";
 import { RazorpayPrivateRoomModal } from "../ui/RazorpayPrivateRoomModal";
-import { UserStatsModal } from "../ui/UserStatsModal";
 
 export default function LiveDirectoryPage() {
   const navigate = useNavigate();
@@ -53,7 +52,6 @@ export default function LiveDirectoryPage() {
   const [copiedMode, setCopiedMode] = useState<"code" | "link" | null>(null);
   const [showPrivateModal, setShowPrivateModal] = useState<boolean>(false);
   const [isPrivatePaid, setIsPrivatePaid] = useState<boolean>(false);
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     void loadUserData();
@@ -141,15 +139,6 @@ export default function LiveDirectoryPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsStatsModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/25 transition-all cursor-pointer"
-          >
-            <Database size={13} />
-            <span>SQLite Console</span>
-          </button>
-
           <Link
             to="/admin"
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold hover:bg-purple-500/30 transition-all"
@@ -491,11 +480,6 @@ export default function LiveDirectoryPage() {
           handleLaunchChess(hostCode, true, true);
         }}
         playerName={playerName}
-      />
-
-      <UserStatsModal
-        isOpen={isStatsModalOpen}
-        onClose={() => setIsStatsModalOpen(false)}
       />
 
       {/* Footer */}

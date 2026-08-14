@@ -5,7 +5,6 @@ import {
   Crown,
   Swords,
   User,
-  Database,
   ArrowLeft,
   Sparkles,
   ShieldCheck,
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import { sqliteDb } from "../db";
 import { lobbyService, type LobbyStats } from "../core/lobby";
-import { UserStatsModal } from "../ui/UserStatsModal";
 
 export default function GamesCatalogPage() {
   const navigate = useNavigate();
@@ -32,8 +30,6 @@ export default function GamesCatalogPage() {
     privateRooms: [],
     allRooms: [],
   });
-
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     void (async () => {
@@ -82,15 +78,6 @@ export default function GamesCatalogPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsStatsModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/25 transition-all cursor-pointer"
-          >
-            <Database size={13} />
-            <span>SQLite Stats</span>
-          </button>
-
           <Link
             to="/admin"
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold hover:bg-purple-500/30 transition-all"
@@ -267,11 +254,6 @@ export default function GamesCatalogPage() {
 
         </div>
       </div>
-
-      <UserStatsModal
-        isOpen={isStatsModalOpen}
-        onClose={() => setIsStatsModalOpen(false)}
-      />
 
       {/* Footer */}
       <p className="mc-menu-hint mt-2 shrink-0 text-[0.62rem] tracking-[0.2em] text-[#7d6f57]">

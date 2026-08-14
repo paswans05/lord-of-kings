@@ -6,7 +6,6 @@ import {
   Crown,
   Gamepad2,
   Globe,
-  Database,
   ShieldCheck,
   Swords,
   Check,
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import { sqliteDb } from "../db";
 import { lobbyService, type LobbyStats } from "../core/lobby";
-import { UserStatsModal } from "../ui/UserStatsModal";
 
 export default function NamePage() {
   const navigate = useNavigate();
@@ -32,8 +30,6 @@ export default function NamePage() {
     privateRooms: [],
     allRooms: [],
   });
-
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Fetch initial SQLite username
@@ -93,15 +89,6 @@ export default function NamePage() {
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
             <span>{lobbyStats.onlineUsersCount} COMMANDERS ONLINE</span>
           </span>
-
-          <button
-            type="button"
-            onClick={() => setIsStatsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-3 py-0.5 text-xs font-bold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)] hover:bg-amber-500/30 transition-all cursor-pointer"
-          >
-            <Database size={12} />
-            <span>SQLITE STATS</span>
-          </button>
 
           <Link
             to="/admin"
@@ -207,11 +194,6 @@ export default function NamePage() {
           </div>
         </div>
       </div>
-
-      <UserStatsModal
-        isOpen={isStatsModalOpen}
-        onClose={() => setIsStatsModalOpen(false)}
-      />
 
       {/* Footer info */}
       <p className="mc-menu-hint mt-2 shrink-0 text-[0.62rem] tracking-[0.2em] text-[#7d6f57]">

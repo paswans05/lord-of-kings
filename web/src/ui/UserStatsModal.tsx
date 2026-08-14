@@ -98,17 +98,6 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({ isOpen, onClose 
             <Swords className="w-4 h-4 text-amber-400" />
             Match History ({matches.length})
           </button>
-
-          <button
-            onClick={() => setActiveTab("sql")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-t-xl transition-all ${activeTab === "sql"
-              ? "bg-amber-500/20 text-amber-300 border-t border-x border-amber-500/40"
-              : "text-white/60 hover:text-white"
-              }`}
-          >
-            <Scroll className="w-4 h-4 text-amber-400" />
-            SQLite Console
-          </button>
         </div>
 
         {/* Modal Content */}
@@ -200,51 +189,6 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({ isOpen, onClose 
                     </div>
                   </div>
                 ))
-              )}
-            </div>
-          )}
-
-          {activeTab === "sql" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-amber-300">Run SQL Query on Client SQLite DB:</label>
-                <button
-                  onClick={handleRunSql}
-                  className="flex items-center gap-1 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition-all"
-                >
-                  <Sparkles className="w-3.5 h-3.5" /> Run Query
-                </button>
-              </div>
-
-              <textarea
-                value={customSql}
-                onChange={(e) => setCustomSql(e.target.value)}
-                rows={3}
-                className="w-full p-2.5 rounded-xl bg-black/60 border border-amber-500/40 text-amber-100 font-mono text-xs focus:outline-none focus:border-amber-400"
-              />
-
-              {queryError && (
-                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-mono">
-                  Error: {queryError}
-                </div>
-              )}
-
-              {queryResult && (
-                <div className="overflow-x-auto max-h-48 mc-scroll border border-white/10 rounded-xl">
-                  <table className="w-full text-left border-collapse text-xs font-mono">
-                    <tbody>
-                      {queryResult.map((row, rIdx) => (
-                        <tr key={rIdx} className="border-b border-white/5 hover:bg-white/5">
-                          {row.map((cell, cIdx) => (
-                            <td key={cIdx} className="p-2 border-r border-white/5 text-amber-100/80">
-                              {String(cell)}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               )}
             </div>
           )}
