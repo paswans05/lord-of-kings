@@ -1,7 +1,7 @@
 import initSqlJs, { Database } from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import path from "node:path";
-import { MatchRecord, SavedGame, UserProfile, UserStats } from "./models";
+import { MatchRecord, PaymentRecord, SavedGame, UserProfile, UserStats, AdminCredentials } from "./models";
 import { INIT_DB_SCHEMA } from "./schema";
 
 const STORAGE_KEY = "kings_fall_sqlite_db_v1";
@@ -123,6 +123,16 @@ class SqliteDatabase {
 
       this.persist();
       console.log(`[SQLite DB] Created new user row for UUID: ${userUuid}`);
+    }
+
+    const adminCheck = this.db.exec("SELECT id FROM admin_credentials LIMIT 1;");
+    if (!adminCheck[0] || !adminCheck[0].values[0]) {
+      this.db.run(
+        "INSERT INTO admin_credentials (username, password, email, recovery_key, updated_at) VALUES (?, ?, ?, ?, ?);",
+        ["admin", "admin123", "admin@dravidachess.com", "DRAVIDA2026", Date.now()]
+      );
+      this.persist();
+      console.log("[SQLite DB] Initialized default admin_credentials table.");
     }
   }
 
@@ -324,6 +334,191 @@ class SqliteDatabase {
       draws: r[5] as number,
       winStreak: r[6] as number,
       bestStreak: r[7] as number,
+    };
+  }
+
+  // --- PAYMENTS & ADMIN ---
+  public async recordPayment(payment: Omit<PaymentRecord, "timestamp">): Promise<void> {
+    await this.init();
+    if (!this.db) return;
+
+    const uuid = getOrCreateUserUuid();
+    const now = Date.now();
+    this.db.run(
+      `INSERT OR REPLACE INTO payments 
+       (id, user_uuid, player_name, email, amount, currency, purpose, status, gateway, timestamp) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      [
+        payment.id,
+        uuid,
+        payment.playerName,
+        payment.email || "",
+        payment.amount,
+        payment.currency || "INR",
+        payment.purpose,
+        payment.status || "SUCCESS",
+        payment.gateway || "Razorpay",
+        now,
+      ]
+    );
+
+    this.persist();
+    console.log(`[SQLite DB] Recorded payment: ₹${payment.amount} for ${payment.playerName} (${payment.purpose})`);
+  }
+
+  public async getAllPayments(): Promise<PaymentRecord[]> {
+    await this.init();
+    if (!this.db) return [];
+
+    const res = this.db.exec(
+      `SELECT id, user_uuid, player_name, email, amount, currency, purpose, status, gateway, timestamp 
+       FROM payments 
+       ORDER BY timestamp DESC;`
+    );
+
+    if (!res[0]) return [];
+
+    return res[0].values.map((row) => ({
+      id: row[0] as string,
+      userUuid: row[1] as string,
+      playerName: row[2] as string,
+      email: row[3] as string,
+      amount: row[4] as number,
+      currency: row[5] as string,
+      purpose: row[6] as string,
+      status: row[7] as string,
+      gateway: row[8] as string,
+      timestamp: row[9] as number,
+    }));
+  }
+
+  public async getAllUsers(): Promise<UserProfile[]> {
+    await this.init();
+    if (!this.db) return [];
+
+    const res = this.db.exec(
+      `SELECT id, uuid, username, rating, title, avatar, created_at 
+       FROM users 
+       ORDER BY created_at DESC;`
+    );
+
+    if (!res[0]) return [];
+
+    return res[0].values.map((row) => ({
+      id: row[0] as number,
+      uuid: row[1] as string,
+      username: row[2] as string,
+      rating: row[3] as number,
+      title: row[4] as string,
+      avatar: row[5] as string,
+      createdAt: row[6] as number,
+    }));
+  }
+
+  public async getAdminOverview() {
+    await this.init();
+    const users = await this.getAllUsers();
+    const payments = await this.getAllPayments();
+    const matches = await this.getMatchHistory(100);
+
+    const totalRevenue = payments.reduce((acc, p) => acc + (p.status === "SUCCESS" ? p.amount : 0), 0);
+
+    return {
+      totalUsersCount: users.length,
+      totalMatchesCount: matches.length,
+      totalPaymentsCount: payments.length,
+      totalRevenueINR: totalRevenue,
+      users,
+      payments,
+      recentMatches: matches,
+    };
+  }
+
+  // --- ADMIN AUTH & CREDENTIALS ---
+  public async getAdminCredentials(): Promise<AdminCredentials> {
+    await this.init();
+    const fallback: AdminCredentials = {
+      username: "admin",
+      password: "admin123",
+      email: "admin@dravidachess.com",
+      recoveryKey: "DRAVIDA2026",
+      updatedAt: Date.now(),
+    };
+
+    if (!this.db) return fallback;
+
+    const res = this.db.exec(
+      "SELECT id, username, password, email, recovery_key, updated_at FROM admin_credentials ORDER BY id ASC LIMIT 1;"
+    );
+
+    if (!res[0] || !res[0].values[0]) return fallback;
+
+    const row = res[0].values[0];
+    return {
+      id: row[0] as number,
+      username: row[1] as string,
+      password: row[2] as string,
+      email: row[3] as string,
+      recoveryKey: row[4] as string,
+      updatedAt: row[5] as number,
+    };
+  }
+
+  public async verifyAdminLogin(usernameInput: string, passwordInput: string): Promise<boolean> {
+    await this.init();
+    const creds = await this.getAdminCredentials();
+    return (
+      usernameInput.trim().toLowerCase() === creds.username.toLowerCase() &&
+      passwordInput.trim() === creds.password
+    );
+  }
+
+  public async updateAdminPassword(newPasswordInput: string, usernameInput = "admin"): Promise<boolean> {
+    await this.init();
+    if (!this.db) return false;
+
+    const pwd = newPasswordInput.trim();
+    this.db.run("UPDATE admin_credentials SET password = ?, updated_at = ? WHERE username = ? OR id = 1;", [
+      pwd,
+      Date.now(),
+      usernameInput.trim(),
+    ]);
+
+    const check = this.db.exec("SELECT id FROM admin_credentials LIMIT 1;");
+    if (!check[0] || !check[0].values[0]) {
+      this.db.run(
+        "INSERT INTO admin_credentials (username, password, email, recovery_key, updated_at) VALUES (?, ?, ?, ?, ?);",
+        ["admin", pwd, "admin@dravidachess.com", "DRAVIDA2026", Date.now()]
+      );
+    }
+
+    this.persist();
+    console.log(`[SQLite DB] Updated admin password in SQLite DB.`);
+    return true;
+  }
+
+  public async resetAdminPasswordWithRecovery(
+    recoveryKeyOrEmailInput: string,
+    newPasswordInput: string
+  ): Promise<{ success: boolean; message: string }> {
+    await this.init();
+    const creds = await this.getAdminCredentials();
+    const input = recoveryKeyOrEmailInput.trim().toLowerCase();
+
+    const matchesRecoveryKey = input === creds.recoveryKey.toLowerCase();
+    const matchesEmail = input === creds.email.toLowerCase();
+
+    if (!matchesRecoveryKey && !matchesEmail) {
+      return {
+        success: false,
+        message: "Invalid Recovery Key or Email address. Verify system defaults (DRAVIDA2026 / admin@dravidachess.com)",
+      };
+    }
+
+    await this.updateAdminPassword(newPasswordInput, creds.username);
+    return {
+      success: true,
+      message: "Admin password successfully reset and saved to SQLite database!",
     };
   }
 

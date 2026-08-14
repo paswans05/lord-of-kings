@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, ShieldCheck, Lock, X, CreditCard, Mail } from "lucide-react";
+import { sqliteDb } from "../db";
 
 declare global {
   interface Window {
@@ -59,6 +60,17 @@ export function RazorpayPrivateRoomModal({
       image: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
       handler: function (response: any) {
         console.log("[Razorpay] Private Room Payment successful:", response);
+        void sqliteDb.recordPayment({
+          id: response.razorpay_payment_id || `pay_rzp_${Date.now()}_25`,
+          userUuid: "",
+          playerName,
+          email: email.trim() || `${playerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+          amount: 25,
+          currency: "INR",
+          purpose: "Private Room Hosting Pass (₹25)",
+          status: "SUCCESS",
+          gateway: "Razorpay",
+        });
         setLoading(false);
         onSuccess();
         onClose();
@@ -98,6 +110,17 @@ export function RazorpayPrivateRoomModal({
         window.localStorage.setItem("kg.payment_email", email.trim());
       } catch {}
     }
+    void sqliteDb.recordPayment({
+      id: `pay_sim_${Date.now()}_25`,
+      userUuid: "",
+      playerName,
+      email: email.trim() || `${playerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+      amount: 25,
+      currency: "INR",
+      purpose: "Private Room Hosting Pass (₹25)",
+      status: "SUCCESS",
+      gateway: "Razorpay Simulator",
+    });
     setTimeout(() => {
       setLoading(false);
       onSuccess();

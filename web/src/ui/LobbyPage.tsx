@@ -24,6 +24,7 @@ import { Crest } from "./Heraldry";
 import { ArenaPicker, ArmyPicker, type MusterChoice } from "./Muster";
 import { RazorpayPrivateRoomModal } from "./RazorpayPrivateRoomModal";
 import { UserStatsModal } from "./UserStatsModal";
+import { AdminModal } from "./AdminModal";
 import type { MatchConfig } from "./MainMenu";
 import { sqliteDb } from "../db";
 
@@ -77,6 +78,7 @@ export function LobbyPage({
   const [copiedMode, setCopiedMode] = useState<"code" | "link" | null>(null);
   const [showPrivateModal, setShowPrivateModal] = useState<boolean>(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
   const [isPrivatePaid, setIsPrivatePaid] = useState<boolean>(false);
   const [privateNotice, setPrivateNotice] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>(() => {
@@ -235,6 +237,13 @@ export function LobbyPage({
             <Database size={10} />
             <span>SQLITE STATS & PROFILE</span>
           </button>
+          <a
+            href="/admin"
+            className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 border border-purple-500/40 px-2.5 py-0.5 text-[0.6rem] font-bold text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.3)] hover:bg-purple-500/30 transition-all cursor-pointer"
+          >
+            <ShieldCheck size={10} />
+            <span>ADMIN CONSOLE (/admin)</span>
+          </a>
         </div>
       </div>
 
@@ -968,6 +977,11 @@ export function LobbyPage({
       <UserStatsModal
         isOpen={isStatsModalOpen}
         onClose={() => setIsStatsModalOpen(false)}
+      />
+
+      <AdminModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
       />
 
       {/* Footer hint */}

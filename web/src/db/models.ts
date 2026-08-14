@@ -41,3 +41,25 @@ export interface SavedGame {
   pgn: string;
   updatedAt: number;
 }
+
+export interface PaymentRecord {
+  id: string;
+  userUuid: string;
+  playerName: string;
+  email: string;
+  amount: number;
+  currency: string;
+  purpose: string;
+  status: string;
+  gateway: string;
+  timestamp: number;
+}
+
+export interface AdminCredentials {
+  id?: number;
+  username: string;
+  password: string;
+  email: string;
+  recoveryKey: string;
+  updatedAt: number;
+}

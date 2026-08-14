@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, ShieldCheck, Sparkles, X, Mic, MessageSquare, CreditCard, Mail } from "lucide-react";
+import { sqliteDb } from "../db";
 
 declare global {
   interface Window {
@@ -63,6 +64,17 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
       image: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
       handler: function (response: any) {
         console.log("[Razorpay] Payment successful:", response);
+        void sqliteDb.recordPayment({
+          id: response.razorpay_payment_id || `pay_rzp_${Date.now()}_10`,
+          userUuid: "",
+          playerName,
+          email: email.trim() || `${playerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+          amount: 10,
+          currency: "INR",
+          purpose: "Voice & Room Text Chat Pass (₹10)",
+          status: "SUCCESS",
+          gateway: "Razorpay",
+        });
         unlockPremiumComms();
         setLoading(false);
         onSuccess();
@@ -88,7 +100,6 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        // Fallback if script load was blocked by adblocker
         simulatePayment();
       }
     } catch (err) {
@@ -104,6 +115,17 @@ export function RazorpayModal({ isOpen, onClose, onSuccess, playerName = "Comman
         window.localStorage.setItem("kg.payment_email", email.trim());
       } catch { }
     }
+    void sqliteDb.recordPayment({
+      id: `pay_sim_${Date.now()}_10`,
+      userUuid: "",
+      playerName,
+      email: email.trim() || `${playerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+      amount: 10,
+      currency: "INR",
+      purpose: "Voice & Room Text Chat Pass (₹10)",
+      status: "SUCCESS",
+      gateway: "Razorpay Simulator",
+    });
     setTimeout(() => {
       unlockPremiumComms();
       setLoading(false);

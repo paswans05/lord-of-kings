@@ -42,4 +42,26 @@ export const INIT_DB_SCHEMA = `
     pgn TEXT NOT NULL,
     updated_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS payments (
+    id TEXT PRIMARY KEY,
+    user_uuid TEXT NOT NULL,
+    player_name TEXT NOT NULL,
+    email TEXT DEFAULT '',
+    amount INTEGER NOT NULL,
+    currency TEXT DEFAULT 'INR',
+    purpose TEXT NOT NULL,
+    status TEXT DEFAULT 'SUCCESS',
+    gateway TEXT DEFAULT 'Razorpay',
+    timestamp INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_credentials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    email TEXT DEFAULT 'admin@dravidachess.com',
+    recovery_key TEXT DEFAULT 'DRAVIDA2026',
+    updated_at INTEGER NOT NULL
+  );
 `;
