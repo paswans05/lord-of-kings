@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Crown, Swords, Settings as SettingsIcon, User, Users, Globe, Copy, Check, Link, Lock, Sparkles, ShieldCheck } from "lucide-react";
+import { Crown, Swords, Settings as SettingsIcon, User, Users, Globe, Copy, Check, Link, Lock, Sparkles, ShieldCheck, Database } from "lucide-react";
 
 import type { Difficulty, Faction } from "../core/types";
 import { generateRoomCode } from "../core/multiplayer";
@@ -7,6 +7,7 @@ import { lobbyService, type LobbyStats } from "../core/lobby";
 import { Crest } from "./Heraldry";
 import { ArenaPicker, ArmyPicker, type MusterChoice } from "./Muster";
 import { RazorpayPrivateRoomModal } from "./RazorpayPrivateRoomModal";
+import { UserStatsModal } from "./UserStatsModal";
 import type { MatchConfig } from "./MainMenu";
 
 interface LobbyPageProps {
@@ -55,6 +56,7 @@ export function LobbyPage({
   const [joinCode, setJoinCode] = useState<string>("");
   const [copiedMode, setCopiedMode] = useState<"code" | "link" | null>(null);
   const [showPrivateModal, setShowPrivateModal] = useState<boolean>(false);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
   const [isPrivatePaid, setIsPrivatePaid] = useState<boolean>(false);
   const [privateNotice, setPrivateNotice] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>(() => {
@@ -175,7 +177,7 @@ export function LobbyPage({
         </h1>
 
         {/* Live Online Badges */}
-        <div className="mt-1 flex items-center justify-center gap-2">
+        <div className="mt-1 flex items-center justify-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-0.5 text-[0.6rem] font-bold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
             <span>{lobbyStats.onlineUsersCount} COMMANDERS ONLINE</span>
@@ -186,6 +188,13 @@ export function LobbyPage({
               <span>{lobbyStats.publicRooms.length} PUBLIC LOBBIES</span>
             </span>
           )}
+          <button
+            onClick={() => setIsStatsModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-[0.6rem] font-bold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.3)] hover:bg-amber-500/30 transition-all cursor-pointer"
+          >
+            <Database size={10} />
+            <span>SQLITE STATS & PROFILE</span>
+          </button>
         </div>
       </div>
 
@@ -598,6 +607,11 @@ export function LobbyPage({
           lobbyService.registerHostRoom(hostCode, true);
         }}
         playerName={playerName}
+      />
+
+      <UserStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
       />
 
       {/* Footer hint */}
