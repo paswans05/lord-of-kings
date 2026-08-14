@@ -11,7 +11,7 @@ the rules and a Web Worker search engine for the computer opponent.
 
 ```bash
 bun install   # or npm install
-bun run dev   # or npm run dev  → http://localhost:5173
+bun run dev   # or npm run dev  → http://localhost:8080
 bun run build # production bundle in dist/
 bun run preview
 ```

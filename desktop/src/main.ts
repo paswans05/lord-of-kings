@@ -30,7 +30,7 @@ function createWindow() {
   app.commandLine.appendSwitch("enable-zero-copy");
 
   const isDev = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
-  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:8080";
 
   if (isDev) {
     mainWindow.loadURL(devUrl).catch(() => {

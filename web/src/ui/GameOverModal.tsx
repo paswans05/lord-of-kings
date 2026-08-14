@@ -4,6 +4,7 @@ import { Check, Copy, Home, PauseCircle, RotateCw, Swords } from "lucide-react";
 import { DEMO_REMATCH_DELAY_MS } from "../core/gameController";
 import type { Difficulty, EndReason, Faction, GameResult } from "../core/types";
 import { Crest } from "./Heraldry";
+import { sqliteDb } from "../db";
 
 /**
  * Extra framing for an AI vs AI duel. The viewer is an audience,
@@ -62,6 +63,61 @@ export function GameOverModal({
   onMenu,
 }: GameOverModalProps) {
   const [copied, setCopied] = useState(false);
+  const hasRecorded = useRef(false);
+
+  useEffect(() => {
+    if (hasRecorded.current) return;
+    hasRecorded.current = true;
+
+    void (async () => {
+      try {
+        const user = await sqliteDb.getUser();
+        const username = user?.username || "Commander";
+
+        let whiteName = "Ivory AI";
+        let blackName = "Obsidian AI";
+
+        if (showcase) {
+          whiteName = `${showcase.white.toUpperCase()} AI`;
+          blackName = `${showcase.black.toUpperCase()} AI`;
+        } else if (versusComputer) {
+          if (playerColor === "w") {
+            whiteName = username;
+            blackName = "Warlord AI";
+          } else {
+            whiteName = "Warlord AI";
+            blackName = username;
+          }
+        } else {
+          whiteName = playerColor === "w" ? username : "Opponent";
+          blackName = playerColor === "b" ? username : "Opponent";
+        }
+
+        const winnerStr =
+          result.winner === "w"
+            ? whiteName
+            : result.winner === "b"
+            ? blackName
+            : "draw";
+
+        await sqliteDb.recordMatch({
+          id: `match_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          mode: showcase ? "demo" : versusComputer ? "ai" : "multiplayer",
+          whitePlayer: whiteName,
+          blackPlayer: blackName,
+          winner: winnerStr,
+          resultReason: REASON_COPY[result.reason] || result.reason,
+          movesCount: moveCount,
+          pgn: pgn || "",
+          arena: "Standard Arena",
+          durationSeconds: Math.max(1, Math.round(moveCount * 4.5)),
+        });
+        console.log("[SQLite DB] Recorded match result into database successfully.");
+      } catch (err) {
+        console.warn("[SQLite DB] Failed to record match result:", err);
+      }
+    })();
+  }, [moveCount, pgn, playerColor, result, showcase, versusComputer]);
 
   const draw = result.winner === null;
   const playerWon = versusComputer && result.winner === playerColor;

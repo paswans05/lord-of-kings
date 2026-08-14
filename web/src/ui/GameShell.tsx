@@ -569,7 +569,8 @@ export function GameShell() {
           service.joinRoom(config.online.roomCode);
         }
       } else {
-        setOnlineInfo({ isOnline: false, isConnected: false, pingMs: 0, roomCode: "" });
+        const storedName = (typeof window !== "undefined" && window.localStorage?.getItem("kg.playername")) || "Commander";
+        setOnlineInfo({ isOnline: false, isConnected: false, pingMs: 0, roomCode: "", myCommanderName: config.online?.playerName || storedName });
       }
 
       controller.start({

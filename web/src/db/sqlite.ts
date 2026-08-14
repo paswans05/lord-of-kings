@@ -1,4 +1,5 @@
 import initSqlJs, { Database } from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import path from "node:path";
 import { MatchRecord, SavedGame, UserProfile, UserStats } from "./models";
 import { INIT_DB_SCHEMA } from "./schema";
@@ -56,8 +57,7 @@ class SqliteDatabase {
               // Node.js environment (e.g. Vitest / SSR)
               return path.resolve(process.cwd(), "public", file);
             }
-            const baseUrl = (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) || "/";
-            return `${baseUrl}${file}`.replace(/\/\//g, "/");
+            return sqlWasmUrl;
           },
         });
 
@@ -183,8 +183,28 @@ class SqliteDatabase {
     if (!this.db) return;
 
     const uuid = getOrCreateUserUuid();
-    this.db.run("UPDATE users SET username = ? WHERE uuid = ?;", [username, uuid]);
+    const check = this.db.exec("SELECT id FROM users WHERE uuid = ?;", [uuid]);
+    if (!check[0] || !check[0].values[0]) {
+      this.db.run(
+        "INSERT INTO users (uuid, username, rating, title, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?);",
+        [uuid, username, 1200, "Commander", "knight", Date.now()]
+      );
+      const userRow = this.db.exec("SELECT id FROM users WHERE uuid = ?;", [uuid]);
+      const userId = (userRow[0]?.values[0]?.[0] as number) || 1;
+      this.db.run(
+        "INSERT OR IGNORE INTO user_stats (user_id, user_uuid, total_matches, wins, losses, draws, win_streak, best_streak) VALUES (?, ?, 0, 0, 0, 0, 0, 0);",
+        [userId, uuid]
+      );
+    } else {
+      this.db.run("UPDATE users SET username = ? WHERE uuid = ?;", [username, uuid]);
+    }
     this.persist();
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("kg.playername", username);
+      } catch {}
+    }
+    console.log(`[SQLite DB] Saved username "${username}" for UUID ${uuid} into SQLite database.`);
   }
 
   // --- MATCH HISTORY ---

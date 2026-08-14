@@ -10,7 +10,7 @@ git clone <your-repo-url>
 cd lord-of-kings
 
 # Web App
-cd web && npm install && npm run dev     # http://localhost:5173
+cd web && npm install && npm run dev     # http://localhost:8080
 
 # Desktop Application (Electron)
 cd ../desktop && npm install && npm run dev
@@ -74,7 +74,7 @@ cd web
 # Install dependencies
 npm install
 
-# Start local dev server (http://localhost:5173)
+# Start local dev server (http://localhost:8080)
 npm run dev
 
 # Build production bundle (web/dist/)
