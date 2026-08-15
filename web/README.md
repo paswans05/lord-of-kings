@@ -529,10 +529,14 @@ subscribes to them. Nothing in `src/core` imports three.js.
 
 ```
 src/
+  pages/           multi-page routing (NamePage, GamesCatalogPage, LiveDirectoryPage, ChessGamePage, AdminPage, ForgotPasswordPage)
+  db/              in-browser SQLite database (sql.js WebAssembly, models, schema, cookie UUID auth)
   core/            chess state, no rendering
     gameController.ts  owns chess.js, clocks, undo, AI turns, snapshots
     types.ts           shared game types (MoveEvent, GameSnapshot, …)
     emitter.ts         tiny typed event emitter
+    lobby.ts           ntfy.sh SSE real-time matchmaking & room discovery
+    multiplayer.ts     PeerJS WebRTC P2P multiplayer engine
   ai/
     engine.worker.ts   negamax + alpha-beta + quiescence + iterative deepening
     aiClient.ts        main-thread handle, cancels stale searches
@@ -565,6 +569,7 @@ src/
     Hud.tsx            top bar, field tally, spoils, chronicle sigil, showcase rail
     Tooltip.tsx        themed tooltip for the icon-only controls
     MainMenu.tsx / MoveLedger.tsx / SettingsPanel.tsx / GameOverModal.tsx / Heraldry.tsx
+    LobbyPage.tsx / AdminModal.tsx / UserStatsModal.tsx / RazorpayModal.tsx
     Dravida.css       the whole overlay's look
   audio/             Web Audio mixer with layered score stems
   assets/generated.ts  army skins (sculpts, clips, arms, voices per civilisation) + audio URLs

@@ -1,6 +1,5 @@
 import initSqlJs, { Database } from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
-import path from "node:path";
 import { MatchRecord, PaymentRecord, SavedGame, UserProfile, UserStats, AdminCredentials } from "./models";
 import { INIT_DB_SCHEMA } from "./schema";
 
@@ -55,7 +54,7 @@ class SqliteDatabase {
           locateFile: (file) => {
             if (typeof window === "undefined") {
               // Node.js environment (e.g. Vitest / SSR)
-              return path.resolve(process.cwd(), "public", file);
+              return `${process.cwd()}/public/${file}`;
             }
             return sqlWasmUrl;
           },

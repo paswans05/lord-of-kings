@@ -53,7 +53,12 @@ lord-of-kings/
 - **Full chess rules** — castling, en passant, promotion, check, checkmate, stalemate, threefold repetition, fifty-move rule via chess.js.
 - **🌐 Real-Time Cross-Device Multiplayer** — WebRTC Peer-to-Peer matchmaking via PeerJS with global real-time room discovery (`ntfy.sh` SSE pub/sub) & active host connection verification.
 - **🏰 Live Lobby Directory** — Browse active public rooms (`JOIN`) or host secret private rooms (₹25 Razorpay unlock).
-- **📱💻 Multi-Platform Native Builds** — Run natively on Web browsers, Desktop (.exe / .dmg / .AppImage via Electron), and Mobile phones (Android APK / iOS via Capacitor).
+- **📱💻 Multi-Platform Native Builds** — Run natively on Web browsers, Desktop (.exe / .dmg / .AppImage via Electron), and Mobile phones (Android APK / iOS via Flutter).
+- **🗄️ WebAssembly SQLite Database** — Full in-browser SQLite via `sql.js` WASM. Persists to `localStorage` as a Base64-encoded binary. Six tables: `users`, `match_history`, `user_stats`, `saved_games`, `payments`, `admin_credentials`.
+- **🔐 Cookie UUID Authentication** — Each visitor gets a persistent `kg_user_uuid` cookie (1-year expiry). Returning visitors restore their profile, stats, and match history from the local SQLite database automatically.
+- **🛡️ Admin Dashboard** — Password-protected admin panel (`/admin`) with user management, payment logs, match history, and a raw SQL console. Password recovery via recovery key or email at `/forgot-password`.
+- **📄 Multi-Page Routing** — React Router with dedicated pages: `/` (commander identity), `/games` (game catalog), `/chess` (3D match), `/live-directory` (lobby browser), `/admin`, `/forgot-password`.
+- **💳 Razorpay Payment Integration** — Premium feature unlocking (private room hosting) via Razorpay gateway, with all transactions recorded in SQLite.
 - **Rigged 3D characters, not chess pieces** — eighteen sculpts (six per army), each with `idle`, `walk`, `attack` and `death` skeletal clips, plus weapons, shields and a floating rank crest.
 - **Synthesised footsteps & 18 death cries** — scuffs for footsoldiers, leather for clergy, plate for tower guardians, and authentic voice acting.
 - **Cinematic captures** — camera punches in, defender burns away through light motes (cold soul-light for Dravida, embers for Sun Empire).
@@ -500,58 +505,181 @@ Switchable at any time from the camera menu or Settings; each one is a complete 
 ## Project structure
 
 ```
-.
-├── rork.json               workspace manifest (one app: web/)
-├── scripts/
-│   └── rewrite-commit-messages.sh
-└── web/
-    ├── index.html
-    ├── public/             icon, favicon, banner.jpg (share card), robots.txt (drop local .glb models here)
-    └── src/
-        ├── core/           chess state — never imports three.js
-        │   ├── gameController.ts   owns chess.js, clocks, undo, AI turns, snapshots
-        │   ├── types.ts            MoveEvent, GameSnapshot, LedgerMove, …
-        │   └── emitter.ts          tiny typed event emitter
-        ├── ai/
-        │   ├── engine.worker.ts    negamax + alpha-beta + quiescence + iterative deepening
-        │   └── aiClient.ts         main-thread handle, cancels stale searches
-        ├── scene/          three.js only
-        │   ├── sceneEngine.ts      renderer, camera, interaction, move animation, cinematics
-        │   ├── environment.ts      hall, lighting, torches, particles, PMREM environment
-        │   ├── arena.ts            the four battleground looks and their ordering
-        │   ├── battlefield.ts      siege props, camps, fires, birds
-        │   ├── jungle.ts           canopy, palms, vines, pollen for the Sun Temple
-        │   ├── board.ts            tiles, base, engraved labels, highlight pool
-        │   ├── pieces.ts           rigged GLB loading, clips, faction materials, mixers
-        │   ├── weapons.ts          arms per rank: primitives, loadouts, hand/bone mounting
-        │   ├── armoury.ts          fits the generated Napoleonic weapons into the prop frame
-        │   ├── gltfQueue.ts        the one download window every GLB fetch shares
-        │   ├── rankBadges.ts       floating heraldic crests, flat map tokens
-        │   ├── effects.ts          particle bursts, flashes, dissolve, camera shake and rumble
-        │   ├── alarm.ts            the red lamp that stands over a king in check
-        │   ├── strikes.ts          per-rank blow visuals (slash arc, ground wave, pillar)
-        │   ├── spells.ts           fireball orbs, per-army fire, the shared light pool
-        │   ├── gunfire.ts          muzzle flashes, rounds in flight, powder smoke banks
-        │   ├── ammunition.ts       the four rounds: pistol/musket ball, Minié bullet, iron round shot
-        │   ├── postfx.ts           EffectComposer pipeline (bloom, SSAO, DOF, grade, SMAA, clarity)
-        │   ├── textures.ts         procedural marble, basalt, bronze, cloth
-        │   ├── quality.ts          graphics presets + auto-detection
-        │   ├── viewport.ts         solves the camera framing for the screen it is drawn into
-        │   └── tween.ts            promise-based tween engine
-        ├── ui/             React + CSS overlay
-        │   ├── GameShell.tsx       phases, settings, attract mode, keyboard shortcuts
-        │   ├── MainMenu.tsx        mode / colour / strength / clock / muster selection
-        │   ├── Hud.tsx             top bar, field tally, spoils, chronicle sigil, showcase rail
-        │   ├── Tooltip.tsx         themed tooltip for the icon-only controls
-        │   ├── MoveLedger.tsx      the chronicle: move list, PGN, hover preview
-        │   ├── Muster.tsx          army + battleground pickers, and their locked in-match view
-        │   ├── SettingsPanel.tsx   muster (out of match), graphics, picture, cinematics, sound
-        │   ├── Heraldry.tsx        crests, hourglasses, piece glyphs
-        │   └── Dravida.css        the whole overlay's look
-        ├── audio/          Web Audio mixer with layered score stems
-        ├── assets/         army skins: model / clip / voice URLs per civilisation
-        └── components/ui/  shadcn/ui primitives
+lord-of-kings/
+├── README.md               this file
+├── CONTRIBUTING.md          contribution guide
+├── LICENSE                  MIT
+│
+├── web/                    Vite + React 19 + Three.js 3D Web Application
+│   ├── index.html
+│   ├── vite.config.ts       dev server on port 8080
+│   ├── vitest.config.ts     unit test runner config
+│   ├── package.json
+│   ├── public/              static assets served as-is
+│   │   ├── models/          .glb character sculpts & animation clips
+│   │   ├── cries/           .mp3 death cries per army
+│   │   ├── audio/           .mp3 score stems & SFX
+│   │   ├── cards/           share-card images
+│   │   ├── sql-wasm.wasm    sql.js WebAssembly binary (client-side SQLite)
+│   │   ├── banner.jpg       Open Graph / share card
+│   │   ├── favicon.png
+│   │   └── robots.txt
+│   └── src/
+│       ├── App.tsx           React Router root (/, /games, /chess, /admin, …)
+│       ├── main.tsx          Vite entry point
+│       ├── pages/            multi-page routing
+│       │   ├── NamePage.tsx           commander identity / home page
+│       │   ├── GamesCatalogPage.tsx    game directory — launch chess, see upcoming titles
+│       │   ├── LiveDirectoryPage.tsx   live lobby directory with room hosting & user stats
+│       │   ├── ChessGamePage.tsx       3D chess match (wraps GameShell)
+│       │   ├── AdminPage.tsx           protected admin dashboard — users, payments, SQL console
+│       │   ├── ForgotPasswordPage.tsx  admin password recovery via recovery key / email
+│       │   └── NotFound.tsx            404 catch-all
+│       ├── db/               WebAssembly SQLite persistence layer
+│       │   ├── index.ts      barrel export
+│       │   ├── models.ts     TypeScript interfaces (UserProfile, MatchRecord, UserStats, …)
+│       │   ├── schema.ts     CREATE TABLE DDL for all six tables
+│       │   ├── sqlite.ts     SqliteDatabase class — cookie UUID auth, CRUD, admin auth, raw SQL
+│       │   └── sqlite.test.ts  Vitest unit tests for the database layer
+│       ├── core/             chess state — never imports three.js
+│       │   ├── gameController.ts   owns chess.js, clocks, undo, AI turns, snapshots
+│       │   ├── types.ts            MoveEvent, GameSnapshot, LedgerMove, …
+│       │   ├── emitter.ts          tiny typed event emitter
+│       │   ├── lobby.ts            ntfy.sh SSE lobby discovery & stats
+│       │   ├── multiplayer.ts      PeerJS WebRTC P2P matchmaking
+│       │   └── sqliteDb.ts         re-export bridge for legacy imports
+│       ├── ai/
+│       │   ├── engine.worker.ts    negamax + alpha-beta + quiescence + iterative deepening
+│       │   └── aiClient.ts         main-thread handle, cancels stale searches
+│       ├── scene/            three.js only
+│       │   ├── sceneEngine.ts      renderer, camera, interaction, move animation, cinematics
+│       │   ├── environment.ts      hall, lighting, torches, particles, PMREM environment
+│       │   ├── arena.ts            the four battleground looks and their ordering
+│       │   ├── battlefield.ts      siege props, camps, fires, birds
+│       │   ├── jungle.ts           canopy, palms, vines, pollen for the Sun Temple
+│       │   ├── board.ts            tiles, base, engraved labels, highlight pool
+│       │   ├── pieces.ts           rigged GLB loading, clips, faction materials, mixers
+│       │   ├── weapons.ts          arms per rank: primitives, loadouts, hand/bone mounting
+│       │   ├── armoury.ts          fits the generated Napoleonic weapons into the prop frame
+│       │   ├── gltfQueue.ts        the one download window every GLB fetch shares
+│       │   ├── rankBadges.ts       floating heraldic crests, flat map tokens
+│       │   ├── effects.ts          particle bursts, flashes, dissolve, camera shake and rumble
+│       │   ├── alarm.ts            the red lamp that stands over a king in check
+│       │   ├── strikes.ts          per-rank blow visuals (slash arc, ground wave, pillar)
+│       │   ├── spells.ts           fireball orbs, per-army fire, the shared light pool
+│       │   ├── gunfire.ts          muzzle flashes, rounds in flight, powder smoke banks
+│       │   ├── ammunition.ts       the four rounds: pistol/musket ball, Minié bullet, iron round shot
+│       │   ├── postfx.ts           EffectComposer pipeline (bloom, SSAO, DOF, grade, SMAA, clarity)
+│       │   ├── textures.ts         procedural marble, basalt, bronze, cloth
+│       │   ├── quality.ts          graphics presets + auto-detection
+│       │   ├── viewport.ts         solves the camera framing for the screen it is drawn into
+│       │   └── tween.ts            promise-based tween engine
+│       ├── ui/               React + CSS overlay
+│       │   ├── GameShell.tsx       phases, settings, attract mode, keyboard shortcuts
+│       │   ├── MainMenu.tsx        mode / colour / strength / clock / muster selection
+│       │   ├── Hud.tsx             top bar, field tally, spoils, chronicle sigil, showcase rail
+│       │   ├── LobbyPage.tsx       multiplayer lobby UI
+│       │   ├── AdminModal.tsx      in-game admin modal
+│       │   ├── UserStatsModal.tsx  player profile & match history modal with SQLite
+│       │   ├── GameOverModal.tsx   end-of-game verdict card
+│       │   ├── RazorpayModal.tsx   Razorpay payment integration for premium features
+│       │   ├── RazorpayPrivateRoomModal.tsx  private room unlock payment flow
+│       │   ├── Tooltip.tsx         themed tooltip for the icon-only controls
+│       │   ├── MoveLedger.tsx      the chronicle: move list, PGN, hover preview
+│       │   ├── Muster.tsx          army + battleground pickers, and their locked in-match view
+│       │   ├── SettingsPanel.tsx   muster (out of match), graphics, picture, cinematics, sound
+│       │   ├── Heraldry.tsx        crests, hourglasses, piece glyphs
+│       │   └── Dravida.css         the whole overlay's look
+│       ├── audio/            Web Audio mixer with layered score stems
+│       ├── assets/           army skins: model / clip / voice URLs per civilisation
+│       └── components/ui/    shadcn/ui primitives
+│
+├── desktop/                Electron Standalone Desktop App
+│   ├── package.json
+│   ├── electron-builder.json  packaging config (.exe, .dmg, .AppImage)
+│   ├── tsconfig.json
+│   └── src/
+│       └── main.ts           BrowserWindow loading web at :8080 or dist/
+│
+└── mobile/                 Flutter Standalone Mobile App
+    ├── pubspec.yaml          webview_flutter + url_launcher
+    └── lib/
+        └── main.dart         WebView shell → kingsfall.vercel.app
 ```
+
+## Client-Side SQLite Database (`src/db/`)
+
+The game ships a **full SQL database inside the browser**. [`sql.js`](https://github.com/sql-js/sql.js) compiles SQLite to WebAssembly; the `.wasm` binary lives in `public/sql-wasm.wasm` and is loaded once on first page visit. The database is serialised to `localStorage` as a Base64 string after every write, so it survives reloads and browser restarts.
+
+### Schema (six tables)
+
+| Table | Purpose |
+| --- | --- |
+| `users` | Player profile — UUID, username, rating (ELO), title, avatar, creation timestamp |
+| `match_history` | Every completed game — mode, players, winner, result reason, PGN, arena, duration |
+| `user_stats` | Aggregated statistics — total matches, wins, losses, draws, current/best win streak |
+| `saved_games` | Checkpoint saves (FEN + PGN snapshots) |
+| `payments` | Razorpay transaction log — amount, currency, purpose, status, gateway |
+| `admin_credentials` | Admin username, password, email, recovery key |
+
+### Cookie UUID Authentication
+
+Every visitor is assigned a persistent UUID stored in the `kg_user_uuid` cookie (1-year expiry, `SameSite=Lax`). On page load, `getOrCreateUserUuid()` checks for the cookie:
+
+- **Cookie exists**: The UUID is used to query the `users` table and restore the player's profile and stats.
+- **Cookie missing**: A new UUID is generated via `crypto.randomUUID()`, stored in the cookie, and a fresh user row + stats row are inserted into SQLite.
+
+This means returning visitors see their full match history and statistics without any signup flow.
+
+### How the database is used
+
+```
+NamePage  →  sqliteDb.setUsername()     →  UPDATE users SET username = ?
+GameOverModal  →  sqliteDb.recordMatch()  →  INSERT INTO match_history + UPDATE user_stats
+LiveDirectoryPage  →  sqliteDb.getUserStats()  →  SELECT … FROM user_stats
+AdminPage  →  sqliteDb.executeSql()     →  raw SQL console
+```
+
+### Testing the database
+
+```bash
+cd web
+npx vitest run    # runs all 26 tests including 4 SQLite-specific tests
+```
+
+The SQLite tests (`src/db/sqlite.test.ts`) run in Node.js via Vitest. The `locateFile` callback detects the Node.js environment and resolves the `.wasm` binary from `public/sql-wasm.wasm` instead of using the Vite asset URL.
+
+---
+
+## Pages & Routing
+
+The web app uses **React Router v6** with the following routes:
+
+| Route | Page | Purpose |
+| --- | --- | --- |
+| `/` | `NamePage` | Commander identity registration — set your handle, see online count |
+| `/games` | `GamesCatalogPage` | Game directory — launch Chess, browse upcoming titles (Checkers, Carrom, Chaturanga) |
+| `/chess` | `ChessGamePage` | 3D chess match — wraps `GameShell` |
+| `/play` | `ChessGamePage` | Alias for `/chess` |
+| `/live-directory` | `LiveDirectoryPage` | Live lobby browser — host/join rooms, view player stats & match history |
+| `/admin` | `AdminPage` | Protected admin dashboard — login with credentials stored in SQLite |
+| `/forgot-password` | `ForgotPasswordPage` | Admin password recovery via recovery key (`DRAVIDA2026`) or email |
+| `*` | `NotFound` | 404 catch-all |
+
+---
+
+## Admin Dashboard (`/admin`)
+
+The admin panel is a **full-page protected route** with session-based authentication (`sessionStorage`).
+
+- **Default credentials**: username `admin`, password `admin123`
+- **Recovery key**: `DRAVIDA2026` (or email `admin@dravidachess.com`)
+- **Features**: User management, payment log viewer, match history browser, raw SQL console
+- **Credential storage**: All credentials live in the client-side SQLite `admin_credentials` table
+
+After login, the admin can browse all registered users, view payment transactions, inspect match records, and execute arbitrary SQL against the local database.
+
+---
 
 ## Architecture
 
