@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from "electron";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,13 +34,30 @@ function createWindow() {
         });
     }
     else {
-        // In production, load compiled web build from ../web/dist/index.html
-        const webDistPath = path.join(__dirname, "../../web/dist/index.html");
-        mainWindow.loadFile(webDistPath).catch((err) => {
-            console.error("[Desktop] Failed to load production bundle:", err);
-            // Fallback to dev server
-            mainWindow?.loadURL(devUrl);
-        });
+        // In production, locate compiled web bundle
+        const possiblePaths = [
+            path.join(app.getAppPath(), "web/dist/index.html"),
+            path.join(app.getAppPath(), "dist/index.html"),
+            path.join(__dirname, "../../web/dist/index.html"),
+            path.join(__dirname, "../web/dist/index.html"),
+        ];
+        let foundPath = null;
+        for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+                foundPath = p;
+                break;
+            }
+        }
+        if (foundPath) {
+            mainWindow.loadFile(foundPath).catch((err) => {
+                console.error("[Desktop] Failed to load production bundle:", err);
+                mainWindow?.loadURL(devUrl);
+            });
+        }
+        else {
+            console.warn("[Desktop] Production bundle not found, falling back to:", devUrl);
+            mainWindow.loadURL(devUrl);
+        }
     }
     // Open external links in default browser
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {

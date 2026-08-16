@@ -109,9 +109,31 @@ npm run dev
 # Build TypeScript main process
 npm run build
 
-# Package native installers (.exe, .dmg, .AppImage) in desktop/release/
+# Package native installers (.exe, .dmg, .AppImage, win-unpacked) in desktop/release/
 npm run dist
+
+# Build unpacked folder for Steamworks / SteamPipe distribution
+npm run dist:dir
 ```
+
+#### 🎮 Steam & Steam Deck Integration
+
+##### Add as a Non-Steam Game to your Steam Library:
+1. Build the desktop app: `cd desktop && npm run dist`
+2. Open the **Steam** client.
+3. Click **Games** (top menu) → **Add a Non-Steam Game to My Library...**
+4. Click **Browse...** and select:
+   `desktop/release/win-unpacked/King's Fall 3D Chess.exe` (or the portable `.exe`)
+5. Click **Add Selected Programs**.
+6. Set Custom Steam Artwork:
+   - **Cover / Grid Banner**: `desktop/public/banner.jpg`
+   - **Game Icon**: `desktop/public/icon.png`
+
+##### Features on Steam:
+- **Steam Overlay**: Full in-game overlay (`Shift + Tab`) support for chats, guides, and browser.
+- **Steam Deck & Big Picture**: Native 1280×800 16:10 framing, trackpad cursor, and touch screen support.
+- **Steam Controller**: Custom key remapping for Xbox, DualShock/DualSense, Switch Pro, and Steam Deck controllers.
+- **Screenshots & Broadcasting**: Capture screenshots with `F12` and stream via Steam Broadcast.
 
 ---
 
@@ -594,12 +616,17 @@ lord-of-kings/
 │       ├── assets/           army skins: model / clip / voice URLs per civilisation
 │       └── components/ui/    shadcn/ui primitives
 │
-├── desktop/                Electron Standalone Desktop App
+├── desktop/                Electron Standalone Desktop App (Self-Contained)
 │   ├── package.json
+│   ├── vite.config.ts        compiles renderer to dist/renderer
 │   ├── electron-builder.json  packaging config (.exe, .dmg, .AppImage)
-│   ├── tsconfig.json
-│   └── src/
-│       └── main.ts           BrowserWindow loading web at :8080 or dist/
+│   ├── tsconfig.json         renderer TypeScript config
+│   ├── tsconfig.electron.json main/preload TypeScript config
+│   ├── public/               models, audio, cries, WASM binaries, icons
+│   ├── electron/             Electron main & preload scripts
+│   │   ├── main.ts           BrowserWindow loading dist/renderer or dev server
+│   │   └── preload.ts        contextBridge IPC bridge
+│   └── src/                  1:1 full React application source code
 │
 └── mobile/                 Flutter Standalone Mobile App
     ├── pubspec.yaml          webview_flutter + url_launcher

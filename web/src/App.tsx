@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,11 +14,17 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const isFileOrDesktop =
+  typeof window !== "undefined" &&
+  (window.location.protocol === "file:" || (window as unknown as { electronAPI?: { isDesktop?: boolean } }).electronAPI?.isDesktop);
+
+const Router = isFileOrDesktop ? HashRouter : BrowserRouter;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Router>
         <Routes>
           <Route path="/" element={<NamePage />} />
           <Route path="/games" element={<GamesCatalogPage />} />
@@ -30,7 +36,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </TooltipProvider>
   </QueryClientProvider>
 );

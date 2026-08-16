@@ -1,14 +1,14 @@
 {
   "appId": "com.kingsfall.chess3d.desktop",
   "productName": "King's Fall 3D Chess",
+  "executableName": "KingsFall",
   "copyright": "Copyright © 2026 King's Fall Team",
   "directories": {
     "output": "release",
     "buildResources": "build"
   },
   "files": [
-    "dist/**/*",
-    "../web/dist/**/*"
+    "dist/**/*"
   ],
   "win": {
     "target": [
@@ -18,6 +18,10 @@
       },
       {
         "target": "portable",
+        "arch": ["x64"]
+      },
+      {
+        "target": "dir",
         "arch": ["x64"]
       }
     ],

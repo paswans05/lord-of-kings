@@ -1,0 +1,27 @@
+{
+  "name": "lord-of-kings",
+  "version": "1.0.0",
+  "private": true,
+  "description": "King's Fall — Dravida 3D Chess (Web, Desktop & Mobile)",
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "dev:web": "npm --prefix web run dev",
+    "dev:desktop": "npm --prefix desktop run dev",
+    "build": "npm --prefix web run build && npm --prefix desktop run build",
+    "build:web": "npm --prefix web run build",
+    "build:desktop": "npm --prefix desktop run build",
+    "dist:desktop": "npm --prefix desktop run dist",
+    "test": "npm --prefix web test"
+  },
+  "keywords": [
+    "chess",
+    "3d-chess",
+    "threejs",
+    "electron",
+    "flutter",
+    "sqlite",
+    "wasm"
+  ],
+  "author": "King's Fall Team",
+  "license": "MIT"
+}
